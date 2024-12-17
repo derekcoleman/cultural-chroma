@@ -92,12 +92,17 @@ export default {
           to: {
             height: '0'
           }
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" }
         }
       },
       animation: {
         fadeIn: "fadeIn 0.5s ease-in-out",
         'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out'
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        shimmer: "shimmer 1.5s ease-in-out infinite",
       },
     },
   },

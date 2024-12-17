@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  Loader2, 
   Music2, 
   HeadphonesIcon,
-  Rocket,
   Music,
   Music3,
   Music4,
-  CloudDownload,
-  Shuffle,
   Headphones,
-  Speaker,
-  Volume,
-  Volume2,
-  Radio
+  Guitar,
+  Piano,
+  Disc,
+  Radio,
+  Mic2,
+  Speaker
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -33,30 +31,52 @@ import type { Recommendation, MusicData } from "@/lib/recommendations";
 
 const LoadingIcon = ({ className }: { className?: string }) => {
   const [iconIndex, setIconIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  
   const icons = [
-    <Rocket className={className} />,
     <Music className={className} />,
     <Music3 className={className} />,
     <Music4 className={className} />,
-    <CloudDownload className={className} />,
-    <Shuffle className={className} />,
     <Headphones className={className} />,
-    <Speaker className={className} />,
-    <Volume className={className} />,
-    <Volume2 className={className} />,
+    <Guitar className={className} />,
+    <Piano className={className} />,
+    <Disc className={className} />,
     <Radio className={className} />,
-    <Loader2 className={className} />
+    <Mic2 className={className} />,
+    <Speaker className={className} />
   ];
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const iconInterval = setInterval(() => {
       setIconIndex((prev) => (prev + 1) % icons.length);
-    }, 400); // Reduced from 800ms to 400ms for faster rotation
+    }, 80); // 5x faster than before (400ms -> 80ms)
 
-    return () => clearInterval(interval);
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => (prev < 100 ? prev + 1 : 0));
+    }, 30);
+
+    return () => {
+      clearInterval(iconInterval);
+      clearInterval(progressInterval);
+    };
   }, []);
 
-  return icons[iconIndex];
+  return (
+    <div className="flex flex-col items-center gap-8">
+      {icons[iconIndex]}
+      <div className="w-64 h-2 bg-spotify-darkgray rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-spotify-green transition-all duration-200 ease-in-out"
+          style={{ 
+            width: `${progress}%`,
+            backgroundImage: 'linear-gradient(90deg, rgba(29,185,84,0.8) 0%, #1DB954 50%, rgba(29,185,84,0.8) 100%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1s infinite linear'
+          }}
+        />
+      </div>
+    </div>
+  );
 };
 
 const Dashboard = () => {
