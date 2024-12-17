@@ -77,7 +77,6 @@ serve(async (req) => {
               - Top Tracks: ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}
               - Playlists: ${musicData.playlists.join(', ')}
               - Location: ${musicData.country || 'Unknown'}
-              - Recently Played: ${musicData.recentlyPlayed.join(', ')}
 
               Provide ${count} cultural recommendations (one for each category) that would deeply resonate with their taste.
               Ensure recommendations are specific and personally tailored to their musical preferences.`
@@ -102,7 +101,6 @@ serve(async (req) => {
       console.log('Parsed recommendations:', JSON.stringify(recommendations));
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
-      // Provide diverse fallback recommendations
       recommendations = CATEGORIES.map(category => ({
         type: category,
         title: `${musicData.genres[0]} Inspired ${category}`,
