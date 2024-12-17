@@ -7,7 +7,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Book, Plane, Shirt, ChevronDown, Plus, Loader2 } from "lucide-react";
+import { 
+  Book, 
+  Plane, 
+  Shirt, 
+  ChevronDown, 
+  Plus, 
+  Loader2,
+  Tv,
+  Home,
+  UtensilsCrossed,
+  GraduationCap,
+  Palette,
+  Heart,
+  Laptop,
+  CalendarDays,
+  Headphones,
+  Newspaper,
+  Film
+} from "lucide-react";
 import { Recommendation, getRecommendations, MusicData } from "@/lib/recommendations";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -17,22 +35,36 @@ interface RecommendationGridProps {
   onLoadMore: (newRecommendations: Recommendation[]) => void;
 }
 
+const CATEGORIES = [
+  { id: "all", label: "All Categories", icon: null },
+  { id: "book", label: "Books", icon: Book },
+  { id: "travel", label: "Travel", icon: Plane },
+  { id: "fashion", label: "Fashion", icon: Shirt },
+  { id: "movies & tv", label: "Movies & TV", icon: Tv },
+  { id: "home décor & art", label: "Home Décor & Art", icon: Home },
+  { id: "food & drink", label: "Food & Drink", icon: UtensilsCrossed },
+  { id: "online courses", label: "Online Courses", icon: GraduationCap },
+  { id: "hobbies & crafts", label: "Hobbies & Crafts", icon: Palette },
+  { id: "wellness", label: "Wellness", icon: Heart },
+  { id: "tech & gadgets", label: "Tech & Gadgets", icon: Laptop },
+  { id: "cultural events", label: "Cultural Events", icon: CalendarDays },
+  { id: "podcasts", label: "Podcasts", icon: Headphones },
+  { id: "magazines", label: "Magazines", icon: Newspaper },
+  { id: "cultural media", label: "Cultural Media", icon: Film },
+];
+
 const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: RecommendationGridProps) => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const getIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'book':
-        return <Book className="h-5 w-5" />;
-      case 'travel':
-        return <Plane className="h-5 w-5" />;
-      case 'fashion':
-        return <Shirt className="h-5 w-5" />;
-      default:
-        return null;
+    const category = CATEGORIES.find(cat => cat.id.toLowerCase() === type.toLowerCase());
+    if (category && category.icon) {
+      const Icon = category.icon;
+      return <Icon className="h-5 w-5" />;
     }
+    return null;
   };
 
   const filteredRecommendations = recommendations.filter(item => 
@@ -51,7 +83,8 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
 
     setIsLoading(true);
     try {
-      const newRecommendations = await getRecommendations(musicData, 4);
+      // Request new recommendations with a higher count to ensure variety
+      const newRecommendations = await getRecommendations(musicData, 15);
       onLoadMore(newRecommendations);
       toast({
         title: "New Recommendations",
@@ -75,23 +108,21 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="bg-spotify-darkgray border-spotify-lightgray/20 text-white">
-              {selectedType === "all" ? "All Categories" : selectedType}
+              {CATEGORIES.find(cat => cat.id === selectedType)?.label || "All Categories"}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-spotify-darkgray border-spotify-lightgray/20">
-            <DropdownMenuItem onClick={() => setSelectedType("all")} className="text-white hover:bg-white/10">
-              All Categories
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedType("book")} className="text-white hover:bg-white/10">
-              Books
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedType("travel")} className="text-white hover:bg-white/10">
-              Travel
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSelectedType("fashion")} className="text-white hover:bg-white/10">
-              Fashion
-            </DropdownMenuItem>
+          <DropdownMenuContent className="bg-spotify-darkgray border-spotify-lightgray/20 max-h-[300px] overflow-y-auto">
+            {CATEGORIES.map((category) => (
+              <DropdownMenuItem 
+                key={category.id}
+                onClick={() => setSelectedType(category.id)} 
+                className="text-white hover:bg-white/10 flex items-center gap-2"
+              >
+                {category.icon && <category.icon className="h-4 w-4" />}
+                {category.label}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

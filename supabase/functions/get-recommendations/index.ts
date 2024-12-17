@@ -125,8 +125,11 @@ serve(async (req) => {
               ${locationContext}
 
               Provide ${count} cultural recommendations that would deeply resonate with this complete musical identity.
+              Ensure recommendations are evenly distributed across all categories.
               Each recommendation must be a specific item with a direct URL to purchase/access it.
-              Make sure recommendations reflect the full breadth of their musical taste, not just one aspect.`
+              Make sure recommendations reflect the full breadth of their musical taste, not just one aspect.
+              
+              Important: Do not use search result URLs. Each URL must link directly to the specific item being recommended.`
           }
         ],
         temperature: 0.7,
