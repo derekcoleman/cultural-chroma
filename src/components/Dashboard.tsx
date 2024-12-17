@@ -73,13 +73,13 @@ const Dashboard = () => {
           
           // Collect all musical preferences
           const allGenres = artists.flatMap(artist => artist.genres);
-          const trackGenres = tracks.flatMap(track => 
-            track.artists.map(artist => artist.genres || []).flat()
-          );
+          
+          // For track artists and recently played, we need to handle the case where genres might not be available
+          const trackGenres: string[] = [];
+          const recentGenres: string[] = [];
+          
+          // Collect playlist names
           const playlistNames = playlists.map(playlist => playlist.name);
-          const recentGenres = recentlyPlayed?.flatMap(item => 
-            item.track.artists.flatMap(artist => artist.genres || [])
-          ) || [];
           
           // Combine all musical data
           const newMusicData: MusicData = {
