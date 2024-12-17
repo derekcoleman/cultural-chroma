@@ -8,7 +8,6 @@ import {
   getTopTracks, 
   getUserPlaylists,
   getUserProfile,
-  getRecentlyPlayed
 } from "@/lib/spotify";
 import { getRecommendations } from "@/lib/recommendations";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,13 +36,11 @@ const Dashboard = () => {
             tracks,
             playlists,
             profile,
-            recentlyPlayed
           ] = await Promise.all([
             getTopArtists(),
             getTopTracks(),
             getUserPlaylists(),
             getUserProfile(),
-            getRecentlyPlayed()
           ]);
 
           // Transform artist data to ensure it matches the Artist type
@@ -87,7 +84,6 @@ const Dashboard = () => {
             })),
             playlists: playlistNames,
             country: profile.country,
-            recentlyPlayed: recentlyPlayed?.map(item => item.track.name) || []
           };
 
           setMusicData(newMusicData);

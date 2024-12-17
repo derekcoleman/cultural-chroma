@@ -9,7 +9,6 @@ const SCOPES = [
   "user-top-read",
   "playlist-read-private",
   "user-read-playback-position",
-  "user-read-recently-played",
   "user-read-currently-playing"
 ];
 
@@ -70,23 +69,6 @@ export const getUserProfile = async () => {
     return response;
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    throw error;
-  }
-};
-
-export const getRecentlyPlayed = async () => {
-  try {
-    console.log('Fetching recently played tracks...');
-    const response = await spotifyApi.player.getRecentlyPlayedTracks(20);
-    console.log('Recently played response:', response);
-    return response.items;
-  } catch (error) {
-    // If we get a 403, return null instead of throwing
-    if (error.status === 403) {
-      console.log('Recently played tracks not available (insufficient scope)');
-      return null;
-    }
-    console.error("Error fetching recently played tracks:", error);
     throw error;
   }
 };

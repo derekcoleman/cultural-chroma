@@ -13,7 +13,6 @@ export interface MusicData {
   tracks: Array<{ name: string; artist: string; }>;
   playlists: string[];
   country?: string;
-  recentlyPlayed: string[];
 }
 
 export const getRecommendations = async (musicData: MusicData, count = 14): Promise<Recommendation[]> => {
