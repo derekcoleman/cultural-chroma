@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Music2, HeadphonesIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { spotifyApi, getTopArtists } from "@/lib/spotify";
+import { 
+  spotifyApi, 
+  getTopArtists, 
+  getTopTracks, 
+  getUserPlaylists,
+  getUserProfile,
+  getRecentlyPlayed
+} from "@/lib/spotify";
 import { getRecommendations } from "@/lib/recommendations";
 import { supabase } from "@/integrations/supabase/client";
 import TopArtists from "./TopArtists";
@@ -24,7 +31,21 @@ const Dashboard = () => {
         const accessToken = await spotifyApi.authenticate();
         
         if (accessToken) {
-          const artists = await getTopArtists();
+          // Fetch all Spotify data in parallel
+          const [
+            artists,
+            tracks,
+            playlists,
+            profile,
+            recentlyPlayed
+          ] = await Promise.all([
+            getTopArtists(),
+            getTopTracks(),
+            getUserPlaylists(),
+            getUserProfile(),
+            getRecentlyPlayed()
+          ]);
+
           setTopArtists(artists);
           
           // Save favorite artists to Supabase
@@ -43,9 +64,29 @@ const Dashboard = () => {
             }
           }
           
+          // Collect all musical preferences
           const allGenres = artists.flatMap(artist => artist.genres);
-          setGenres(allGenres);
-          const aiRecommendations = await getRecommendations(allGenres);
+          const trackGenres = tracks.flatMap(track => track.artists.flatMap(artist => artist.genres || []));
+          const playlistNames = playlists.map(playlist => playlist.name);
+          const recentGenres = recentlyPlayed.flatMap(item => 
+            item.track.artists.flatMap(artist => artist.genres || [])
+          );
+          
+          // Combine all musical data
+          const musicData = {
+            genres: [...new Set([...allGenres, ...trackGenres, ...recentGenres])],
+            artists: artists.map(a => a.name),
+            tracks: tracks.map(t => ({
+              name: t.name,
+              artist: t.artists[0].name
+            })),
+            playlists: playlistNames,
+            country: profile.country,
+            recentlyPlayed: recentlyPlayed.map(item => item.track.name)
+          };
+
+          setGenres(musicData.genres);
+          const aiRecommendations = await getRecommendations(musicData);
           setRecommendations(aiRecommendations);
           
           toast({
