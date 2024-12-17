@@ -8,16 +8,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Book, Plane, Shirt, ChevronDown, Plus, Loader2 } from "lucide-react";
-import { Recommendation, getRecommendations } from "@/lib/recommendations";
+import { Recommendation, getRecommendations, MusicData } from "@/lib/recommendations";
 import { useToast } from "@/components/ui/use-toast";
 
 interface RecommendationGridProps {
   recommendations: Recommendation[];
-  genres: string[];
+  musicData: MusicData | null;
   onLoadMore: (newRecommendations: Recommendation[]) => void;
 }
 
-const RecommendationGrid = ({ recommendations, genres, onLoadMore }: RecommendationGridProps) => {
+const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: RecommendationGridProps) => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -40,9 +40,18 @@ const RecommendationGrid = ({ recommendations, genres, onLoadMore }: Recommendat
   );
 
   const handleLoadMore = async () => {
+    if (!musicData) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Music data not available. Please try refreshing the page.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const newRecommendations = await getRecommendations(genres, 4);
+      const newRecommendations = await getRecommendations(musicData, 4);
       onLoadMore(newRecommendations);
       toast({
         title: "New Recommendations",

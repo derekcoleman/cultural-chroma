@@ -15,13 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 import TopArtists from "./TopArtists";
 import RecommendationGrid from "./RecommendationGrid";
 import type { Artist } from "@/types/spotify";
-import type { Recommendation } from "@/lib/recommendations";
+import type { Recommendation, MusicData } from "@/lib/recommendations";
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [genres, setGenres] = useState<string[]>([]);
+  const [musicData, setMusicData] = useState<MusicData | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -73,7 +73,7 @@ const Dashboard = () => {
           );
           
           // Combine all musical data
-          const musicData = {
+          const newMusicData: MusicData = {
             genres: [...new Set([...allGenres, ...trackGenres, ...recentGenres])],
             artists: artists.map(a => a.name),
             tracks: tracks.map(t => ({
@@ -85,8 +85,8 @@ const Dashboard = () => {
             recentlyPlayed: recentlyPlayed.map(item => item.track.name)
           };
 
-          setGenres(musicData.genres);
-          const aiRecommendations = await getRecommendations(musicData);
+          setMusicData(newMusicData);
+          const aiRecommendations = await getRecommendations(newMusicData);
           setRecommendations(aiRecommendations);
           
           toast({
@@ -110,7 +110,7 @@ const Dashboard = () => {
     initializeSpotify();
   }, [navigate, toast]);
 
-  const handleLoadMore = (newRecommendations: Recommendation[]) => {
+  const handleLoadMore = async (newRecommendations: Recommendation[]) => {
     setRecommendations(prev => [...prev, ...newRecommendations]);
   };
 
@@ -143,7 +143,7 @@ const Dashboard = () => {
             </div>
             <RecommendationGrid 
               recommendations={recommendations} 
-              genres={genres}
+              musicData={musicData}
               onLoadMore={handleLoadMore}
             />
           </div>
