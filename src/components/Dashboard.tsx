@@ -33,7 +33,7 @@ const Dashboard = () => {
         if (accessToken) {
           // Fetch all Spotify data in parallel
           const [
-            artists,
+            artistsResponse,
             tracks,
             playlists,
             profile,
@@ -45,6 +45,13 @@ const Dashboard = () => {
             getUserProfile(),
             getRecentlyPlayed()
           ]);
+
+          // Transform artist data to ensure it matches the Artist type
+          const artists: Artist[] = artistsResponse.map(artist => ({
+            name: artist.name,
+            genres: artist.genres || [],
+            id: artist.id
+          }));
 
           setTopArtists(artists);
           
@@ -65,9 +72,9 @@ const Dashboard = () => {
           }
           
           // Collect all musical preferences
-          const allGenres = artists.flatMap(artist => artist.genres || []);
+          const allGenres = artists.flatMap(artist => artist.genres);
           const trackGenres = tracks.flatMap(track => 
-            track.artists.flatMap(artist => artist.genres || [])
+            track.artists.map(artist => artist.genres || []).flat()
           );
           const playlistNames = playlists.map(playlist => playlist.name);
           const recentGenres = recentlyPlayed?.flatMap(item => 
