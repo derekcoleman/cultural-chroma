@@ -1,23 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { spotifyApi, getTopArtists } from "@/lib/spotify";
 import { getRecommendations } from "@/lib/recommendations";
-import { Loader2 } from "lucide-react";
-
-interface Artist {
-  name: string;
-  genres: string[];
-}
-
-interface Recommendation {
-  type: string;
-  title: string;
-  reason: string;
-  link: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import TopArtists from "./TopArtists";
+import RecommendationGrid from "./RecommendationGrid";
+import type { Artist } from "@/types/spotify";
+import type { Recommendation } from "@/lib/recommendations";
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
@@ -34,6 +25,22 @@ const Dashboard = () => {
         if (accessToken) {
           const artists = await getTopArtists();
           setTopArtists(artists);
+          
+          // Save favorite artists to Supabase
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            for (const artist of artists) {
+              await supabase
+                .from('favorite_artists')
+                .upsert({
+                  user_id: user.id,
+                  artist_name: artist.name,
+                  genres: artist.genres,
+                }, {
+                  onConflict: 'user_id,artist_name'
+                });
+            }
+          }
           
           // Get all genres from top artists
           const allGenres = artists.flatMap(artist => artist.genres);
@@ -75,50 +82,11 @@ const Dashboard = () => {
         <h1 className="text-4xl font-bold mb-8">Your Cultural Profile</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <Card className="bg-spotify-darkgray border-none text-white">
-            <CardHeader>
-              <CardTitle>Top Artists</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {topArtists.map((artist) => (
-                  <li key={artist.name} className="flex justify-between items-center">
-                    <span className="font-medium">{artist.name}</span>
-                    <span className="text-spotify-lightgray">
-                      {artist.genres.slice(0, 2).join(", ")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <TopArtists artists={topArtists} />
         </div>
 
         <h2 className="text-3xl font-bold mb-6">AI-Powered Recommendations</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recommendations.map((item) => (
-            <Card 
-              key={item.title} 
-              className="bg-spotify-darkgray border-none text-white hover:ring-2 hover:ring-spotify-green transition-all"
-            >
-              <CardHeader>
-                <CardTitle className="text-lg">{item.type}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-medium mb-2">{item.title}</h3>
-                <p className="text-sm text-spotify-lightgray mb-4">{item.reason}</p>
-                <a 
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-spotify-green hover:underline text-sm mt-4 block"
-                >
-                  Learn More →
-                </a>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <RecommendationGrid recommendations={recommendations} />
       </div>
     </div>
   );
