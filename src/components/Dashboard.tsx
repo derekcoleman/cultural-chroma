@@ -37,8 +37,8 @@ const Dashboard = () => {
           
           // Get all genres from top artists
           const allGenres = artists.flatMap(artist => artist.genres);
-          const recommendations = getRecommendations(allGenres);
-          setRecommendations(recommendations);
+          const aiRecommendations = await getRecommendations(allGenres);
+          setRecommendations(aiRecommendations);
           
           toast({
             title: "Connected to Spotify",
@@ -94,7 +94,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <h2 className="text-3xl font-bold mb-6">Recommended for You</h2>
+        <h2 className="text-3xl font-bold mb-6">AI-Powered Recommendations</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recommendations.map((item) => (
             <Card 
@@ -106,7 +106,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <h3 className="font-medium mb-2">{item.title}</h3>
-                <p className="text-sm text-spotify-lightgray">{item.reason}</p>
+                <p className="text-sm text-spotify-lightgray mb-4">{item.reason}</p>
                 <a 
                   href={item.link}
                   target="_blank"

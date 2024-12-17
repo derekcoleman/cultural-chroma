@@ -1,13 +1,13 @@
-type RecommendationType = 'Book' | 'Travel' | 'Fashion';
+import { getAIRecommendations } from './openai';
 
-interface Recommendation {
-  type: RecommendationType;
+export interface Recommendation {
+  type: string;
   title: string;
   reason: string;
   link: string;
-  tags: string[];
 }
 
+// Keep the existing recommendationDatabase as fallback
 const recommendationDatabase: Record<string, Recommendation[]> = {
   'indie rock': [
     {
@@ -143,23 +143,32 @@ const recommendationDatabase: Record<string, Recommendation[]> = {
   ]
 };
 
-export const getRecommendations = (genres: string[]): Recommendation[] => {
-  const recommendations: Recommendation[] = [];
-  
-  genres.forEach(genre => {
-    const genreKey = Object.keys(recommendationDatabase).find(key => 
-      genre.toLowerCase().includes(key.toLowerCase())
-    );
+export const getRecommendations = async (genres: string[]): Promise<Recommendation[]> => {
+  try {
+    // Try to get AI-powered recommendations
+    const aiRecommendations = await getAIRecommendations(genres);
+    return aiRecommendations;
+  } catch (error) {
+    console.warn('Falling back to static recommendations:', error);
     
-    if (genreKey) {
-      recommendations.push(...recommendationDatabase[genreKey]);
+    // Fallback to existing static recommendations
+    const recommendations: Recommendation[] = [];
+    
+    genres.forEach(genre => {
+      const genreKey = Object.keys(recommendationDatabase).find(key => 
+        genre.toLowerCase().includes(key.toLowerCase())
+      );
+      
+      if (genreKey) {
+        recommendations.push(...recommendationDatabase[genreKey]);
+      }
+    });
+    
+    // If no specific recommendations found, return indie rock as default
+    if (recommendations.length === 0) {
+      return recommendationDatabase['indie rock'];
     }
-  });
-  
-  // If no specific recommendations found, return indie rock as default
-  if (recommendations.length === 0) {
-    return recommendationDatabase['indie rock'];
+    
+    return recommendations.slice(0, 6); // Limit to 6 recommendations
   }
-  
-  return recommendations.slice(0, 6); // Limit to 6 recommendations
 };
