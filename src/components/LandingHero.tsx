@@ -7,7 +7,9 @@ const LandingHero = () => {
 
   const handleLogin = async () => {
     try {
-      await spotifyApi.authenticate();
+      console.log('Starting Spotify authentication...');
+      const result = await spotifyApi.authenticate();
+      console.log('Authentication result:', result);
     } catch (error) {
       console.error("Login error:", error);
       toast({
