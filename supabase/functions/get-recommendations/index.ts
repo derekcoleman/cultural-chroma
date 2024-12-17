@@ -23,20 +23,34 @@ const CATEGORIES = [
   'Cultural Media'
 ];
 
-const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's detailed music preferences including genres, artists, tracks, playlists, and location, suggest a diverse range of cultural recommendations across these categories: ${CATEGORIES.join(', ')}. 
+const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's detailed music preferences, suggest highly specific recommendations across various categories. Each recommendation must be a real, specific item/place/experience with a dedicated URL where it can be found (not search results).
 
-For each recommendation, provide:
-- A specific title/place/item/experience name
-- A 2-3 sentence explanation connecting it to their music taste and preferences
-- A relevant URL for more information
+For books: Recommend specific titles available on Goodreads or Amazon
+For fashion: Link to specific items on major retailers
+For travel: Link to specific destination guides or booking pages
+For movies/TV: Link to specific shows/movies on streaming platforms
+For home décor: Link to specific items on design websites
+For food/drink: Link to specific restaurants or products
+For courses: Link to specific courses on platforms like Coursera/Udemy
+For hobbies: Link to specific starter kits or learning resources
+For wellness: Link to specific programs or products
+For tech: Link to specific products on major retailers
+For events: Link to specific upcoming events or venues
+For podcasts: Link to specific shows on Spotify/Apple Podcasts
+For magazines: Link to specific subscription pages
+For cultural media: Link to specific articles/content
 
 Format as a JSON array with:
-- 'type' (one of the categories listed above)
+- 'type' (category)
 - 'title' (specific name)
-- 'reason' (explanation)
-- 'link' (URL)
+- 'reason' (2-3 sentences explaining connection to their music taste)
+- 'link' (direct URL to the specific item)
 
-Ensure recommendations are evenly distributed across all categories and deeply connected to their musical preferences.`;
+Ensure each recommendation is:
+1. A real, existing item/place/experience
+2. Has a direct, working URL
+3. Is specifically chosen based on the user's music preferences
+4. Links to the actual item, not a search page`;
 
 serve(async (req) => {
   console.log('Function invoked with method:', req.method);
@@ -79,7 +93,8 @@ serve(async (req) => {
               - Location: ${musicData.country || 'Unknown'}
 
               Provide ${count} cultural recommendations (one for each category) that would deeply resonate with their taste.
-              Ensure recommendations are specific and personally tailored to their musical preferences.`
+              Each recommendation must be a specific item with a direct URL to purchase/access it.
+              Make sure recommendations are personally tailored to their musical preferences.`
           }
         ],
         temperature: 0.7,
@@ -101,12 +116,26 @@ serve(async (req) => {
       console.log('Parsed recommendations:', JSON.stringify(recommendations));
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
-      recommendations = CATEGORIES.map(category => ({
-        type: category,
-        title: `${musicData.genres[0]} Inspired ${category}`,
-        reason: `A ${category.toLowerCase()} recommendation based on your interest in ${musicData.genres[0]} music.`,
-        link: `https://www.google.com/search?q=${encodeURIComponent(musicData.genres[0])}+${encodeURIComponent(category)}`
-      }));
+      recommendations = [
+        {
+          type: "Book",
+          title: "Just Kids by Patti Smith",
+          reason: "A memoir about art, music, and creativity in New York City. Perfect for music lovers who appreciate artistic journeys and cultural history.",
+          link: "https://www.goodreads.com/book/show/341879.Just_Kids"
+        },
+        {
+          type: "Travel",
+          title: "Nashville Music Row Tour",
+          reason: "Experience the heart of country music history with guided tours of legendary recording studios and songwriter hangouts.",
+          link: "https://www.viator.com/Nashville-attractions/Music-Row/d799-a1866"
+        },
+        {
+          type: "Fashion",
+          title: "Vintage Band T-Shirt Collection at Beyond Retro",
+          reason: "Authentic vintage band merchandise that connects you directly to music history.",
+          link: "https://www.beyondretro.com/collections/band-t-shirts"
+        }
+      ];
     }
 
     return new Response(
