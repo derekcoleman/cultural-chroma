@@ -6,6 +6,6 @@ export interface Artist {
 
 export interface SimplifiedArtist {
   name: string;
-  genres: string[];
+  genres?: string[];  // Make genres optional since track artists might not have genres
   id?: string;
 }
