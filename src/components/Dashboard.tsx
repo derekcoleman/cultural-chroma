@@ -1,33 +1,74 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { spotifyApi, getTopArtists } from "@/lib/spotify";
+import { getRecommendations } from "@/lib/recommendations";
+import { Loader2 } from "lucide-react";
 
-const mockTopArtists = [
-  { name: "The National", genre: "Indie Rock" },
-  { name: "Bon Iver", genre: "Folk" },
-  { name: "Four Tet", genre: "Electronic" },
-];
+interface Artist {
+  name: string;
+  genres: string[];
+}
 
-const mockRecommendations = [
-  {
-    type: "Book",
-    title: "On the Road by Jack Kerouac",
-    reason: "Based on your indie folk preferences",
-    link: "#",
-  },
-  {
-    type: "Travel",
-    title: "Portland, Oregon",
-    reason: "A hub for indie music and culture",
-    link: "#",
-  },
-  {
-    type: "Fashion",
-    title: "Vintage Denim Jacket",
-    reason: "Matches your alternative music taste",
-    link: "#",
-  },
-];
+interface Recommendation {
+  type: string;
+  title: string;
+  reason: string;
+  link: string;
+}
 
 const Dashboard = () => {
+  const [topArtists, setTopArtists] = useState<Artist[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const initializeSpotify = async () => {
+      try {
+        const accessToken = await spotifyApi.authenticate();
+        
+        if (accessToken) {
+          const artists = await getTopArtists();
+          setTopArtists(artists);
+          
+          // Get all genres from top artists
+          const allGenres = artists.flatMap(artist => artist.genres);
+          const recommendations = getRecommendations(allGenres);
+          setRecommendations(recommendations);
+          
+          toast({
+            title: "Connected to Spotify",
+            description: "Successfully retrieved your music preferences",
+          });
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please try logging in again",
+        });
+        navigate("/");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeSpotify();
+  }, [navigate, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-spotify-black text-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-spotify-green" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-spotify-black text-white p-8">
       <div className="max-w-7xl mx-auto">
@@ -40,10 +81,12 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ul className="space-y-4">
-                {mockTopArtists.map((artist) => (
+                {topArtists.map((artist) => (
                   <li key={artist.name} className="flex justify-between items-center">
                     <span className="font-medium">{artist.name}</span>
-                    <span className="text-spotify-lightgray">{artist.genre}</span>
+                    <span className="text-spotify-lightgray">
+                      {artist.genres.slice(0, 2).join(", ")}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -53,8 +96,11 @@ const Dashboard = () => {
 
         <h2 className="text-3xl font-bold mb-6">Recommended for You</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {mockRecommendations.map((item) => (
-            <Card key={item.title} className="bg-spotify-darkgray border-none text-white hover:ring-2 hover:ring-spotify-green transition-all">
+          {recommendations.map((item) => (
+            <Card 
+              key={item.title} 
+              className="bg-spotify-darkgray border-none text-white hover:ring-2 hover:ring-spotify-green transition-all"
+            >
               <CardHeader>
                 <CardTitle className="text-lg">{item.type}</CardTitle>
               </CardHeader>
@@ -63,6 +109,8 @@ const Dashboard = () => {
                 <p className="text-sm text-spotify-lightgray">{item.reason}</p>
                 <a 
                   href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-spotify-green hover:underline text-sm mt-4 block"
                 >
                   Learn More →
