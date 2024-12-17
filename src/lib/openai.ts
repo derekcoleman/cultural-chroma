@@ -1,6 +1,13 @@
 const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's music taste, 
 you should suggest relevant books, travel destinations, and fashion items that align with their preferences. 
-Format your response as a JSON array of objects, each with 'type' (Book/Travel/Fashion), 'title', 'reason', and 'link' properties.`;
+For each category (books, travel, fashion), provide 4 detailed recommendations.
+Format your response as a JSON array of objects, each with:
+- 'type' (Book/Travel/Fashion)
+- 'title' (specific name/place/item)
+- 'reason' (2-3 sentences explaining why this matches their music taste)
+- 'link' (a relevant URL to explore more)
+
+Make recommendations diverse but connected to their musical preferences through themes, aesthetics, or cultural significance.`;
 
 export const getAIRecommendations = async (genres: string[]) => {
   try {
@@ -17,7 +24,7 @@ export const getAIRecommendations = async (genres: string[]) => {
           { 
             role: 'user', 
             content: `Based on these music genres: ${genres.join(', ')}, 
-              provide 6 cultural recommendations (2 books, 2 travel destinations, 2 fashion items) 
+              provide 12 cultural recommendations (4 books, 4 travel destinations, 4 fashion items) 
               that would appeal to someone with this music taste. Include specific reasons for each recommendation.`
           }
         ],
