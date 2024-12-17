@@ -1,15 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { spotifyApi } from "@/lib/spotify";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const LandingHero = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
       const result = await spotifyApi.authenticate();
       console.log('Authentication result:', result);
+      
+      if (result.authenticated) {
+        toast({
+          title: "Successfully connected to Spotify",
+          description: "Redirecting to dashboard...",
+        });
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast({
