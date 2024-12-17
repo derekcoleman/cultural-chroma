@@ -7,16 +7,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Book, Plane, Shirt, ChevronDown, Plus } from "lucide-react";
+import { Book, Plane, Shirt, ChevronDown, Plus, Loader2 } from "lucide-react";
 import { Recommendation } from "@/lib/recommendations";
+import { useToast } from "@/components/ui/use-toast";
 
 interface RecommendationGridProps {
   recommendations: Recommendation[];
+  genres: string[];
+  onLoadMore: (newRecommendations: Recommendation[]) => void;
 }
 
-const RecommendationGrid = ({ recommendations }: RecommendationGridProps) => {
+const RecommendationGrid = ({ recommendations, genres, onLoadMore }: RecommendationGridProps) => {
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [displayCount, setDisplayCount] = useState(6);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -35,8 +39,26 @@ const RecommendationGrid = ({ recommendations }: RecommendationGridProps) => {
     selectedType === "all" ? true : item.type.toLowerCase() === selectedType.toLowerCase()
   );
 
-  const displayedRecommendations = filteredRecommendations.slice(0, displayCount);
-  const hasMore = displayedRecommendations.length < filteredRecommendations.length;
+  const handleLoadMore = async () => {
+    setIsLoading(true);
+    try {
+      const newRecommendations = await getRecommendations(genres, 4);
+      onLoadMore(newRecommendations);
+      toast({
+        title: "New Recommendations",
+        description: "Successfully loaded more recommendations based on your music taste",
+      });
+    } catch (error) {
+      console.error('Error loading more recommendations:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load more recommendations. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -66,9 +88,9 @@ const RecommendationGrid = ({ recommendations }: RecommendationGridProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedRecommendations.map((item) => (
+        {filteredRecommendations.map((item, index) => (
           <Card 
-            key={item.title} 
+            key={`${item.title}-${index}`}
             className="group bg-spotify-darkgray border-none text-white overflow-hidden backdrop-blur-lg bg-opacity-50 hover:bg-opacity-70 transition-all duration-300"
           >
             <CardHeader className="border-b border-spotify-lightgray/10">
@@ -112,18 +134,21 @@ const RecommendationGrid = ({ recommendations }: RecommendationGridProps) => {
         ))}
       </div>
 
-      {hasMore && (
-        <div className="flex justify-center mt-8">
-          <Button
-            onClick={() => setDisplayCount(prev => prev + 6)}
-            variant="outline"
-            className="bg-spotify-darkgray border-spotify-lightgray/20 text-white hover:bg-white/10"
-          >
+      <div className="flex justify-center mt-8">
+        <Button
+          onClick={handleLoadMore}
+          variant="outline"
+          className="bg-spotify-darkgray border-spotify-lightgray/20 text-white hover:bg-white/10"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
             <Plus className="mr-2 h-4 w-4" />
-            View More
-          </Button>
-        </div>
-      )}
+          )}
+          Load More Recommendations
+        </Button>
+      </div>
     </div>
   );
 };

@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [genres, setGenres] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,6 +44,7 @@ const Dashboard = () => {
           }
           
           const allGenres = artists.flatMap(artist => artist.genres);
+          setGenres(allGenres);
           const aiRecommendations = await getRecommendations(allGenres);
           setRecommendations(aiRecommendations);
           
@@ -66,6 +68,10 @@ const Dashboard = () => {
 
     initializeSpotify();
   }, [navigate, toast]);
+
+  const handleLoadMore = (newRecommendations: Recommendation[]) => {
+    setRecommendations(prev => [...prev, ...newRecommendations]);
+  };
 
   if (isLoading) {
     return (
@@ -94,7 +100,11 @@ const Dashboard = () => {
               <Music2 className="h-6 w-6 text-spotify-green" />
               <h2 className="text-2xl font-semibold">AI-Powered Recommendations</h2>
             </div>
-            <RecommendationGrid recommendations={recommendations} />
+            <RecommendationGrid 
+              recommendations={recommendations} 
+              genres={genres}
+              onLoadMore={handleLoadMore}
+            />
           </div>
         </div>
       </div>
