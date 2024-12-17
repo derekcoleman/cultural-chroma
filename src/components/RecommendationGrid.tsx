@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Book, Plane, Shirt, ChevronDown, Plus, Loader2 } from "lucide-react";
-import { Recommendation } from "@/lib/recommendations";
+import { Recommendation, getRecommendations } from "@/lib/recommendations";
 import { useToast } from "@/components/ui/use-toast";
 
 interface RecommendationGridProps {
