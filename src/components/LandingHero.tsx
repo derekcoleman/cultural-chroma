@@ -1,12 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { spotifyApi } from "@/lib/spotify";
+import { useToast } from "@/components/ui/use-toast";
 
 const LandingHero = () => {
+  const { toast } = useToast();
+
   const handleLogin = async () => {
     try {
       await spotifyApi.authenticate();
     } catch (error) {
       console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Failed to connect to Spotify. Please try again.",
+      });
     }
   };
 
