@@ -1,6 +1,7 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
-const CLIENT_ID = "1db05c2b3a9f4d6e8f0c2d4a6b8e0f9d"; // This is a public client ID
+// This is a public client ID specifically for this app
+const CLIENT_ID = "your-client-id-here"; // You'll need to replace this
 const REDIRECT_URI = window.location.origin + "/dashboard";
 
 export const spotifyApi = SpotifyApi.withUserAuthorization(
