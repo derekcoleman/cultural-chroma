@@ -1,17 +1,17 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
-// This is a public client ID specifically for this app
 const CLIENT_ID = "45c6b39dac50487b8fadc3a6b2592479";
 const REDIRECT_URI = window.location.href.includes('localhost') 
-  ? 'http://localhost:8080'  // Remove trailing slash
-  : 'https://preview--cultural-chroma.lovable.app'; // Remove trailing slash
+  ? 'http://localhost:8080'
+  : 'https://preview--cultural-chroma.lovable.app';
 const SCOPES = [
   "user-read-private",
   "user-top-read",
   "playlist-read-private",
   "user-read-playback-position",
   "user-read-recently-played",
-  "user-read-currently-playing"
+  "user-read-currently-playing",
+  "user-read-recently-played"  // Added this scope
 ];
 
 console.log('Spotify Configuration:', {
