@@ -74,16 +74,12 @@ const Dashboard = () => {
           // Collect all musical preferences
           const allGenres = artists.flatMap(artist => artist.genres);
           
-          // For track artists and recently played, we need to handle the case where genres might not be available
-          const trackGenres: string[] = [];
-          const recentGenres: string[] = [];
-          
           // Collect playlist names
           const playlistNames = playlists.map(playlist => playlist.name);
           
           // Combine all musical data
           const newMusicData: MusicData = {
-            genres: [...new Set([...allGenres, ...trackGenres, ...recentGenres])],
+            genres: [...new Set(allGenres)],
             artists: artists.map(a => a.name),
             tracks: tracks.map(t => ({
               name: t.name,
