@@ -6,8 +6,15 @@ import {
   HeadphonesIcon,
   Rocket,
   Music,
+  Music3,
+  Music4,
   CloudDownload,
-  Shuffle
+  Shuffle,
+  Headphones,
+  Speaker,
+  Volume,
+  Volume2,
+  Radio
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -29,15 +36,22 @@ const LoadingIcon = ({ className }: { className?: string }) => {
   const icons = [
     <Rocket className={className} />,
     <Music className={className} />,
+    <Music3 className={className} />,
+    <Music4 className={className} />,
     <CloudDownload className={className} />,
     <Shuffle className={className} />,
+    <Headphones className={className} />,
+    <Speaker className={className} />,
+    <Volume className={className} />,
+    <Volume2 className={className} />,
+    <Radio className={className} />,
     <Loader2 className={className} />
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIconIndex((prev) => (prev + 1) % icons.length);
-    }, 800);
+    }, 400); // Reduced from 800ms to 400ms for faster rotation
 
     return () => clearInterval(interval);
   }, []);
