@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Music2, HeadphonesIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { spotifyApi, getTopArtists } from "@/lib/spotify";
 import { getRecommendations } from "@/lib/recommendations";
@@ -42,7 +42,6 @@ const Dashboard = () => {
             }
           }
           
-          // Get all genres from top artists
           const allGenres = artists.flatMap(artist => artist.genres);
           const aiRecommendations = await getRecommendations(allGenres);
           setRecommendations(aiRecommendations);
@@ -77,16 +76,27 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-spotify-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Your Cultural Profile</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <TopArtists artists={topArtists} />
+    <div className="min-h-screen bg-gradient-to-b from-spotify-black via-spotify-black to-spotify-darkgray text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center gap-4 mb-12">
+          <HeadphonesIcon className="h-12 w-12 text-spotify-green" />
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-spotify-lightgray bg-clip-text text-transparent">
+            Your Cultural Profile
+          </h1>
         </div>
-
-        <h2 className="text-3xl font-bold mb-6">AI-Powered Recommendations</h2>
-        <RecommendationGrid recommendations={recommendations} />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          <div className="lg:col-span-1">
+            <TopArtists artists={topArtists} />
+          </div>
+          <div className="lg:col-span-2 space-y-8">
+            <div className="flex items-center gap-3 mb-6">
+              <Music2 className="h-6 w-6 text-spotify-green" />
+              <h2 className="text-2xl font-semibold">AI-Powered Recommendations</h2>
+            </div>
+            <RecommendationGrid recommendations={recommendations} />
+          </div>
+        </div>
       </div>
     </div>
   );
