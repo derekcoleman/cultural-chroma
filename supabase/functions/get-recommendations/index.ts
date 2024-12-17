@@ -6,59 +6,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's music genres, suggest relevant books, travel destinations, and fashion items that align with their preferences. For each recommendation, provide:
+- A specific title/place/item name
+- A 2-3 sentence explanation connecting it to their music taste
+- A relevant URL for more information
+Format as a JSON array with 'type' (Book/Travel/Fashion), 'title', 'reason', and 'link' fields.`;
+
 serve(async (req) => {
   console.log('Function invoked with method:', req.method);
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('API Key present:', !!apiKey);
-
-    if (!apiKey) {
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
-    const body = await req.json();
-    console.log('Request body:', JSON.stringify(body));
-
-    const { genres, count = 4 } = body;
+    const { genres, count = 4 } = await req.json();
+    console.log('Received request with genres:', genres);
 
     if (!genres || !Array.isArray(genres)) {
       throw new Error('Invalid genres parameter');
     }
 
-    console.log('Making request to OpenAI with genres:', genres);
-    
-    const prompt = `Based on someone who likes music in these genres: ${genres.join(', ')}, suggest ${count} recommendations that include books, travel destinations, and fashion items. Format as JSON array with type (book/travel/fashion), title, reason (why it matches their taste), and link fields.`;
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
           { 
-            role: 'system', 
-            content: 'You are a helpful assistant that generates recommendations in JSON format. Always return a valid JSON array.'
-          },
-          { role: 'user', content: prompt }
+            role: 'user', 
+            content: `Based on these music genres: ${genres.join(', ')}, provide ${count} cultural recommendations that would appeal to someone with this music taste. Include specific reasons for each recommendation.`
+          }
         ],
         temperature: 0.7,
       }),
     });
 
-    console.log('OpenAI response status:', response.status);
-
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
@@ -68,16 +64,15 @@ serve(async (req) => {
     let recommendations;
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
+      console.log('Parsed recommendations:', JSON.stringify(recommendations));
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
-      recommendations = [
-        {
-          type: "book",
-          title: "Default Recommendation",
-          reason: "Error processing AI response",
-          link: "#"
-        }
-      ];
+      recommendations = genres.map((genre: string) => ({
+        type: "Book",
+        title: `${genre} Music Guide`,
+        reason: `A comprehensive guide to ${genre} music and its cultural impact.`,
+        link: `https://www.goodreads.com/search?q=${encodeURIComponent(genre)}+music`
+      }));
     }
 
     return new Response(
@@ -86,7 +81,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in get-recommendations function:', error.message);
+    console.error('Error in get-recommendations function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
