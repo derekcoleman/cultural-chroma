@@ -14,6 +14,21 @@ serve(async (req) => {
   }
 
   try {
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) {
+      console.error('OpenAI API key not found');
+      return new Response(
+        JSON.stringify({ 
+          error: 'OpenAI API key not configured',
+          details: 'Please set up your OpenAI API key in the Supabase dashboard'
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const { genres, count = 4 } = await req.json();
     console.log('Received request with genres:', genres, 'count:', count);
 
@@ -22,15 +37,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Invalid genres parameter' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) {
-      console.error('OpenAI API key not found');
-      return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
