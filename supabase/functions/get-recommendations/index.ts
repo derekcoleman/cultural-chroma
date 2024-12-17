@@ -61,6 +61,10 @@ serve(async (req) => {
     
     console.log('Processing request with music data:', JSON.stringify(musicData, null, 2));
 
+    if (!musicData || !musicData.genres || !musicData.artists || !musicData.tracks) {
+      throw new Error('Invalid music data provided');
+    }
+
     // Create a rich musical profile analysis
     const genreAnalysis = musicData.genres.length > 0 
       ? `Their diverse taste in ${musicData.genres.join(', ')} shows appreciation for multiple musical traditions.`
@@ -74,7 +78,7 @@ serve(async (req) => {
       ? `Their top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}.`
       : 'No track data available.';
 
-    const playlistAnalysis = musicData.playlists.length > 0
+    const playlistAnalysis = musicData.playlists?.length > 0
       ? `Their playlists (${musicData.playlists.join(', ')}) suggest curated music experiences.`
       : 'No playlist data available.';
 
@@ -82,6 +86,8 @@ serve(async (req) => {
       ? `Being based in ${musicData.country} might influence their cultural preferences.`
       : 'Location data not available.';
 
+    console.log('Sending request to OpenAI with profile analysis');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -89,7 +95,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { 
@@ -114,16 +120,24 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
     console.log('OpenAI response:', data);
 
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI');
+    }
+
     let recommendations;
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
       console.log('Parsed recommendations:', recommendations);
+      
+      if (!Array.isArray(recommendations) || recommendations.length === 0) {
+        throw new Error('Invalid recommendations format');
+      }
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
       throw new Error('Failed to parse recommendations');
