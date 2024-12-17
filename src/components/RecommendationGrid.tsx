@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,13 +56,7 @@ const CATEGORIES = [
 const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: RecommendationGridProps) => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadedRecommendations, setLoadedRecommendations] = useState<Recommendation[]>(recommendations);
   const { toast } = useToast();
-
-  // Update loadedRecommendations when recommendations prop changes
-  useEffect(() => {
-    setLoadedRecommendations(recommendations);
-  }, [recommendations]);
 
   const getIcon = (type: string) => {
     const category = CATEGORIES.find(cat => cat.id.toLowerCase() === type.toLowerCase());
@@ -73,7 +67,7 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
     return null;
   };
 
-  const filteredRecommendations = loadedRecommendations.filter(item => 
+  const filteredRecommendations = recommendations.filter(item => 
     selectedType === "all" ? true : item.type.toLowerCase() === selectedType.toLowerCase()
   );
 
@@ -89,30 +83,12 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
 
     setIsLoading(true);
     try {
-      // Request new recommendations
-      const newRecommendations = await getRecommendations(musicData, 14);
-      
-      // Add only unique recommendations
-      const existingTitles = new Set(loadedRecommendations.map(r => r.title));
-      const uniqueNewRecommendations = newRecommendations.filter(
-        rec => !existingTitles.has(rec.title)
-      );
-
-      if (uniqueNewRecommendations.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "No New Recommendations",
-          description: "Unable to generate new unique recommendations. Please try again later.",
-        });
-        return;
-      }
-
-      setLoadedRecommendations(prev => [...prev, ...uniqueNewRecommendations]);
-      onLoadMore(uniqueNewRecommendations);
-      
+      // Request new recommendations with a higher count to ensure variety
+      const newRecommendations = await getRecommendations(musicData, 15);
+      onLoadMore(newRecommendations);
       toast({
         title: "New Recommendations",
-        description: `Successfully loaded ${uniqueNewRecommendations.length} new recommendations`,
+        description: "Successfully loaded more recommendations based on your music taste",
       });
     } catch (error) {
       console.error('Error loading more recommendations:', error);
