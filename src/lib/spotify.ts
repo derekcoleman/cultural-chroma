@@ -10,7 +10,8 @@ const SCOPES = [
   "user-top-read",
   "playlist-read-private",
   "user-read-playback-position",
-  "user-read-recently-played"
+  "user-read-recently-played",
+  "user-read-currently-playing"
 ];
 
 console.log('Spotify Configuration:', {

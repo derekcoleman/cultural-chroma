@@ -57,7 +57,7 @@ const Dashboard = () => {
                 .upsert({
                   user_id: user.id,
                   artist_name: artist.name,
-                  genres: artist.genres,
+                  genres: artist.genres || [],
                 }, {
                   onConflict: 'user_id,artist_name'
                 });
@@ -65,12 +65,14 @@ const Dashboard = () => {
           }
           
           // Collect all musical preferences
-          const allGenres = artists.flatMap(artist => artist.genres);
-          const trackGenres = tracks.flatMap(track => track.artists.flatMap(artist => artist.genres || []));
-          const playlistNames = playlists.map(playlist => playlist.name);
-          const recentGenres = recentlyPlayed.flatMap(item => 
-            item.track.artists.flatMap(artist => artist.genres || [])
+          const allGenres = artists.flatMap(artist => artist.genres || []);
+          const trackGenres = tracks.flatMap(track => 
+            track.artists.flatMap(artist => artist.genres || [])
           );
+          const playlistNames = playlists.map(playlist => playlist.name);
+          const recentGenres = recentlyPlayed?.flatMap(item => 
+            item.track.artists.flatMap(artist => artist.genres || [])
+          ) || [];
           
           // Combine all musical data
           const newMusicData: MusicData = {
@@ -82,7 +84,7 @@ const Dashboard = () => {
             })),
             playlists: playlistNames,
             country: profile.country,
-            recentlyPlayed: recentlyPlayed.map(item => item.track.name)
+            recentlyPlayed: recentlyPlayed?.map(item => item.track.name) || []
           };
 
           setMusicData(newMusicData);
