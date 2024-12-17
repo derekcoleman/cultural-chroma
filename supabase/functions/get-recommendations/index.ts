@@ -8,100 +8,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const CATEGORIES = [
-  'Book',
-  'Travel',
-  'Fashion',
-  'Movies & TV',
-  'Home Décor & Art',
-  'Food & Drink',
-  'Online Courses',
-  'Hobbies & Crafts',
-  'Wellness',
-  'Tech & Gadgets',
-  'Cultural Events',
-  'Podcasts',
-  'Magazines',
-  'Cultural Media'
-];
+const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's COMPLETE musical profile, provide highly personalized recommendations across various categories.
 
-const SYSTEM_PROMPT = `You are a cultural recommendation expert. Based on the user's detailed music preferences, suggest highly specific recommendations across various categories. Each recommendation must be a real, specific item/place/experience with a dedicated URL where it can be found (not search results).
+Analyze their ENTIRE musical identity including:
+- ALL genres they listen to (not just top ones)
+- The FULL range of artists in their profile
+- ALL their playlist names and themes
+- Their geographic location
+- The overall patterns and themes in their music taste
 
-Analyze their complete musical profile including:
-- All genres they listen to (not just the top one)
-- The full range of artists they enjoy
-- The diversity in their playlists
-- Their location for regional relevance
-- The overall themes and patterns in their music taste
+For each recommendation:
+1. It MUST be a real, existing item/place/experience
+2. It MUST have a direct URL to the specific item (not search results)
+3. It MUST connect to multiple aspects of their musical profile
+4. Each recommendation should be UNIQUE (never repeat recommendations)
 
-For each category, recommend items that truly match their complete musical identity:
-
-For books: Recommend specific titles on Goodreads/Amazon that thematically align with their music taste
-For fashion: Link to specific clothing items on major retailers that match their music's aesthetic
-For travel: Link to specific destinations/experiences that connect to their musical interests
-For movies/TV: Link to specific shows/films on streaming platforms that share themes with their music
-For home décor: Link to specific items that reflect their musical aesthetic
-For food/drink: Link to specific establishments/products that match their cultural interests
-For courses: Link to specific learning experiences that complement their musical interests
-For hobbies: Link to specific activities that align with their musical preferences
-For wellness: Link to specific programs that resonate with their music's energy
-For tech: Link to specific products that enhance their music experience
-For events: Link to specific upcoming events that match their taste
-For podcasts: Link to specific shows that dive deep into their preferred genres
-For magazines: Link to specific publications that cover their musical interests
-For cultural media: Link to specific content that expands on their musical preferences
+Provide an equal number of recommendations across these categories:
+- Books (specific titles on Amazon/Goodreads)
+- Travel Destinations (specific locations/experiences)
+- Fashion (specific clothing items on major retailers)
+- Movies & TV Shows (specific shows/films on streaming platforms)
+- Home Décor & Art (specific items that match their musical aesthetic)
+- Food & Drink (specific establishments/products)
+- Online Courses (specific courses on platforms like Coursera/Udemy)
+- Hobbies & Crafts (specific kits/supplies)
+- Wellness (specific programs/products)
+- Tech & Gadgets (specific products)
+- Cultural Events (specific upcoming events)
+- Podcasts (specific shows)
+- Magazines (specific publications)
+- Cultural Media (specific content)
 
 Format as a JSON array with:
-- 'type' (category)
+- 'type' (category name)
 - 'title' (specific name)
-- 'reason' (2-3 sentences explaining the deep connection to their complete musical profile)
-- 'link' (direct URL to the specific item)
+- 'reason' (2-3 sentences explaining connection to their COMPLETE musical profile)
+- 'link' (direct URL to specific item)
 
-Ensure each recommendation:
-1. Is a real, existing item/place/experience
-2. Has a direct, working URL to the specific item
-3. Connects to multiple aspects of their musical profile, not just one genre or artist
-4. Provides value based on their complete musical identity`;
+IMPORTANT: 
+- Never repeat recommendations
+- Ensure recommendations reflect their ENTIRE musical taste, not just top artists
+- Each recommendation must have a real, working URL to a specific item`;
 
 serve(async (req) => {
-  console.log('Function invoked with method:', req.method);
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
-    }
-
+    console.log('Received request for recommendations');
     const { musicData, count = 14 } = await req.json();
-    console.log('Received music data:', JSON.stringify(musicData));
-
-    if (!musicData || !musicData.genres) {
-      throw new Error('Invalid music data');
-    }
+    
+    // Log the complete music data for debugging
+    console.log('Processing music data:', JSON.stringify(musicData, null, 2));
 
     // Create a rich musical profile analysis
     const genreAnalysis = musicData.genres.length > 0 
-      ? `Your diverse taste in ${musicData.genres.join(', ')} shows an appreciation for ${musicData.genres.length > 1 ? 'multiple musical traditions' : 'this specific musical tradition'}.`
+      ? `Their diverse taste in ${musicData.genres.join(', ')} shows appreciation for multiple musical traditions.`
       : '';
     
     const artistAnalysis = musicData.artists.length > 0
-      ? `You follow artists like ${musicData.artists.join(', ')}, indicating an interest in various musical styles and perspectives.`
+      ? `They follow artists like ${musicData.artists.join(', ')}, indicating varied musical interests.`
       : '';
 
     const trackAnalysis = musicData.tracks.length > 0
-      ? `Your top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}, showing your specific music preferences.`
+      ? `Their top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}.`
       : '';
 
     const playlistAnalysis = musicData.playlists.length > 0
-      ? `Your playlists like ${musicData.playlists.join(', ')} suggest curated music experiences that matter to you.`
+      ? `Their playlists (${musicData.playlists.join(', ')}) suggest curated music experiences.`
       : '';
 
     const locationContext = musicData.country
-      ? `Being based in ${musicData.country} might influence your cultural preferences.`
+      ? `Being based in ${musicData.country} might influence their cultural preferences.`
       : '';
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -124,26 +103,21 @@ serve(async (req) => {
               ${playlistAnalysis}
               ${locationContext}
 
-              Provide ${count} cultural recommendations that would deeply resonate with this complete musical identity.
+              Provide ${count} unique cultural recommendations that deeply resonate with their complete musical identity.
               Ensure recommendations are evenly distributed across all categories.
-              Each recommendation must be a specific item with a direct URL to purchase/access it.
-              Make sure recommendations reflect the full breadth of their musical taste, not just one aspect.
-              
-              Important: Do not use search result URLs. Each URL must link directly to the specific item being recommended.`
+              Each recommendation must be specific and include a direct URL to the item.`
           }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
+    console.log('OpenAI response received:', data);
 
     let recommendations;
     try {
@@ -151,26 +125,7 @@ serve(async (req) => {
       console.log('Parsed recommendations:', JSON.stringify(recommendations));
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
-      recommendations = [
-        {
-          type: "Book",
-          title: "Please Kill Me: The Uncensored Oral History of Punk by Legs McNeil",
-          reason: "This comprehensive oral history connects deeply with various musical genres and artistic movements, perfect for understanding the evolution of alternative music culture.",
-          link: "https://www.goodreads.com/book/show/14595.Please_Kill_Me"
-        },
-        {
-          type: "Travel",
-          title: "Third Man Records - Nashville Location",
-          reason: "Jack White's famous record store/venue/recording studio offers a unique music pilgrimage experience that connects various genres and artistic approaches.",
-          link: "https://thirdmanrecords.com/pages/nashville-storefront"
-        },
-        {
-          type: "Fashion",
-          title: "Dr. Martens 1460 Original Boot",
-          reason: "These iconic boots transcend multiple music scenes and have been worn by artists across various genres, from punk to indie rock.",
-          link: "https://www.drmartens.com/us/en/1460-smooth-leather-lace-up-boots/p/11822006"
-        }
-      ];
+      throw new Error('Failed to parse recommendations');
     }
 
     return new Response(
@@ -181,10 +136,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in get-recommendations function:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: 'Please check the function logs for more information'
-      }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
