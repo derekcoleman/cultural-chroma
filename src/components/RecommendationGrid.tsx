@@ -56,9 +56,6 @@ const CATEGORIES = [
 const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: RecommendationGridProps) => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadedRecommendations, setLoadedRecommendations] = useState<Set<string>>(
-    new Set(recommendations.map(r => `${r.type}-${r.title}`))
-  );
   const { toast } = useToast();
 
   const getIcon = (type: string) => {
@@ -86,33 +83,12 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
 
     setIsLoading(true);
     try {
+      // Request new recommendations with a higher count to ensure variety
       const newRecommendations = await getRecommendations(musicData, 15);
-      
-      // Filter out duplicates based on type and title combination
-      const uniqueNewRecommendations = newRecommendations.filter(rec => {
-        const key = `${rec.type}-${rec.title}`;
-        if (!loadedRecommendations.has(key)) {
-          loadedRecommendations.add(key);
-          return true;
-        }
-        return false;
-      });
-
-      if (uniqueNewRecommendations.length === 0) {
-        toast({
-          variant: "default",
-          title: "No New Recommendations",
-          description: "We've shown you all our current recommendations. Try changing your music preferences to get new suggestions.",
-        });
-        return;
-      }
-
-      onLoadMore(uniqueNewRecommendations);
-      setLoadedRecommendations(new Set([...loadedRecommendations]));
-      
+      onLoadMore(newRecommendations);
       toast({
         title: "New Recommendations",
-        description: `Added ${uniqueNewRecommendations.length} new recommendations based on your music taste`,
+        description: "Successfully loaded more recommendations based on your music taste",
       });
     } catch (error) {
       console.error('Error loading more recommendations:', error);
