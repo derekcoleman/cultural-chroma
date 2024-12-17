@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Music2, HeadphonesIcon } from "lucide-react";
+import { 
+  Loader2, 
+  Music2, 
+  HeadphonesIcon,
+  Rocket,
+  Music,
+  CloudDownload,
+  Shuffle
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   spotifyApi, 
@@ -15,6 +23,27 @@ import TopArtists from "./TopArtists";
 import RecommendationGrid from "./RecommendationGrid";
 import type { Artist } from "@/types/spotify";
 import type { Recommendation, MusicData } from "@/lib/recommendations";
+
+const LoadingIcon = ({ className }: { className?: string }) => {
+  const [iconIndex, setIconIndex] = useState(0);
+  const icons = [
+    <Rocket className={className} />,
+    <Music className={className} />,
+    <CloudDownload className={className} />,
+    <Shuffle className={className} />,
+    <Loader2 className={className} />
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIconIndex((prev) => (prev + 1) % icons.length);
+    }, 800);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return icons[iconIndex];
+};
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
@@ -117,8 +146,11 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-spotify-black text-white flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-spotify-green" />
+      <div className="min-h-screen bg-spotify-black text-white flex flex-col items-center justify-center gap-6">
+        <LoadingIcon className="h-16 w-16 animate-bounce text-spotify-green" />
+        <div className="text-xl font-medium text-spotify-lightgray animate-pulse">
+          Creating Your Cultural Profile...
+        </div>
       </div>
     );
   }
