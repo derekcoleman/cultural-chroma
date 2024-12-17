@@ -23,7 +23,7 @@ For each recommendation:
 3. It MUST connect to multiple aspects of their musical profile
 4. Each recommendation should be UNIQUE (never repeat recommendations)
 
-Provide an equal number of recommendations across these categories:
+Provide an EQUAL number of recommendations across these categories:
 - Books (specific titles on Amazon/Goodreads)
 - Travel Destinations (specific locations/experiences)
 - Fashion (specific clothing items on major retailers)
@@ -43,45 +43,44 @@ Format as a JSON array with:
 - 'type' (category name)
 - 'title' (specific name)
 - 'reason' (2-3 sentences explaining connection to their COMPLETE musical profile)
-- 'link' (direct URL to specific item)
-
-IMPORTANT: 
-- Never repeat recommendations
-- Ensure recommendations reflect their ENTIRE musical taste, not just top artists
-- Each recommendation must have a real, working URL to a specific item`;
+- 'link' (direct URL to specific item)`;
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Received request for recommendations');
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { musicData, count = 14 } = await req.json();
     
-    // Log the complete music data for debugging
-    console.log('Processing music data:', JSON.stringify(musicData, null, 2));
+    console.log('Processing request with music data:', JSON.stringify(musicData, null, 2));
 
     // Create a rich musical profile analysis
     const genreAnalysis = musicData.genres.length > 0 
       ? `Their diverse taste in ${musicData.genres.join(', ')} shows appreciation for multiple musical traditions.`
-      : '';
+      : 'No genre data available.';
     
     const artistAnalysis = musicData.artists.length > 0
       ? `They follow artists like ${musicData.artists.join(', ')}, indicating varied musical interests.`
-      : '';
+      : 'No artist data available.';
 
     const trackAnalysis = musicData.tracks.length > 0
       ? `Their top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}.`
-      : '';
+      : 'No track data available.';
 
     const playlistAnalysis = musicData.playlists.length > 0
       ? `Their playlists (${musicData.playlists.join(', ')}) suggest curated music experiences.`
-      : '';
+      : 'No playlist data available.';
 
     const locationContext = musicData.country
       ? `Being based in ${musicData.country} might influence their cultural preferences.`
-      : '';
+      : 'Location data not available.';
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -108,21 +107,23 @@ serve(async (req) => {
               Each recommendation must be specific and include a direct URL to the item.`
           }
         ],
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response received:', data);
+    console.log('OpenAI response:', data);
 
     let recommendations;
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
-      console.log('Parsed recommendations:', JSON.stringify(recommendations));
+      console.log('Parsed recommendations:', recommendations);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
       throw new Error('Failed to parse recommendations');
@@ -136,7 +137,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in get-recommendations function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Check the function logs for more information'
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
