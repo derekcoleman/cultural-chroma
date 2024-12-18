@@ -27,29 +27,47 @@ Format your response as a JSON array of objects, each with:
 IMPORTANT: Each recommendation must be completely different from any previous ones, exploring new angles of their musical identity.`;
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { musicData, previousRecommendations = [] } = await req.json();
-    console.log('Processing request for new recommendations');
-    console.log('Previous recommendations count:', previousRecommendations.length);
+    console.log('Starting get-recommendations function');
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key is not set');
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    const { musicData, previousRecommendations = [], count = 15 } = await req.json();
+    
+    console.log('Received request with:', {
+      genres: musicData?.genres?.length,
+      artists: musicData?.artists?.length,
+      tracks: musicData?.tracks?.length,
+      previousRecommendations: previousRecommendations?.length,
+      requestedCount: count
+    });
+
+    if (!musicData) {
+      throw new Error('No music data provided');
+    }
 
     // Create a comprehensive musical profile analysis
-    const genreAnalysis = musicData.genres.length > 0 
+    const genreAnalysis = musicData.genres?.length > 0 
       ? `Your diverse taste in ${musicData.genres.join(', ')} shows an appreciation for ${musicData.genres.length > 1 ? 'multiple musical traditions' : 'this specific musical tradition'}.`
       : '';
     
-    const artistAnalysis = musicData.artists.length > 0
+    const artistAnalysis = musicData.artists?.length > 0
       ? `You follow artists like ${musicData.artists.join(', ')}, indicating an interest in various musical styles and perspectives.`
       : '';
 
-    const trackAnalysis = musicData.tracks.length > 0
+    const trackAnalysis = musicData.tracks?.length > 0
       ? `Your top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}, showing your specific music preferences.`
       : '';
 
-    const playlistAnalysis = musicData.playlists.length > 0
+    const playlistAnalysis = musicData.playlists?.length > 0
       ? `Your playlists like ${musicData.playlists.join(', ')} suggest curated music experiences that matter to you.`
       : '';
 
@@ -60,6 +78,8 @@ serve(async (req) => {
     // Add previous recommendations to avoid duplicates
     const previousTitles = previousRecommendations.map(r => r.title.toLowerCase());
     const avoidList = `IMPORTANT: Do NOT recommend anything similar to these previous recommendations: ${previousTitles.join(', ')}`;
+
+    console.log('Making OpenAI API request');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -82,27 +102,30 @@ serve(async (req) => {
               ${locationContext}
               ${avoidList}
 
-              Provide 15 NEW and UNIQUE cultural recommendations that would deeply resonate with this musical identity.
+              Provide ${count} NEW and UNIQUE cultural recommendations that would deeply resonate with this musical identity.
               Ensure each recommendation explores a different aspect of their taste and is NOT similar to previous recommendations.`
           }
         ],
-        temperature: 0.9, // Increased for more variety
+        temperature: 1.0, // Increased for more variety
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorData = await response.text();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
     }
 
     const data = await response.json();
-    console.log('Successfully generated new recommendations');
+    console.log('Successfully received OpenAI response');
     
     let recommendations = [];
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
-      console.log('Number of new recommendations:', recommendations.length);
+      console.log('Successfully parsed recommendations:', recommendations.length);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
+      console.log('Raw response content:', data.choices[0].message.content);
       throw new Error('Failed to parse recommendations');
     }
 
@@ -116,7 +139,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: 'Please check the function logs for more information'
+        details: 'Check the function logs for more information'
       }),
       { 
         status: 500,
