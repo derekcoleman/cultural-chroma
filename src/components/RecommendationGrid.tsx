@@ -57,6 +57,7 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [previousRecommendations, setPreviousRecommendations] = useState<Recommendation[]>([]);
 
   const getIcon = (type: string) => {
     const category = CATEGORIES.find(cat => cat.id.toLowerCase() === type.toLowerCase());
@@ -83,12 +84,25 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
 
     setIsLoading(true);
     try {
-      // Request new recommendations with a higher count to ensure variety
-      const newRecommendations = await getRecommendations(musicData, 15);
+      // Pass current recommendations to avoid duplicates
+      const allPreviousRecommendations = [...previousRecommendations, ...recommendations];
+      setPreviousRecommendations(allPreviousRecommendations);
+      
+      const newRecommendations = await getRecommendations(musicData, 15, allPreviousRecommendations);
+      
+      if (newRecommendations.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No More Recommendations",
+          description: "We've exhausted our unique recommendations based on your taste. Try exploring different categories!",
+        });
+        return;
+      }
+      
       onLoadMore(newRecommendations);
       toast({
         title: "New Recommendations",
-        description: "Successfully loaded more recommendations based on your music taste",
+        description: "Successfully loaded more unique recommendations based on your music taste",
       });
     } catch (error) {
       console.error('Error loading more recommendations:', error);

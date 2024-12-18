@@ -8,44 +8,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You are a sophisticated cultural recommendation expert with deep knowledge of music and its connections to broader culture. Your task is to analyze a user's complete musical profile in detail and provide highly personalized recommendations across various cultural domains.
+const SYSTEM_PROMPT = `You are a sophisticated cultural recommendation expert with deep knowledge of music and its connections to broader culture. Your task is to analyze a user's complete musical profile in detail and provide highly personalized, UNIQUE recommendations across various cultural domains.
 
-Analyze their musical identity through multiple lenses:
-1. Genre Analysis: Examine the full spectrum of genres they enjoy, including subgenres and fusion styles
-2. Artist Analysis: Study their preferred artists' artistic approaches, themes, and cultural impact
-3. Listening Patterns: Consider how their playlist names and track selections reveal their music consumption habits
-4. Cultural Context: Factor in their geographic location and how it might influence their cultural preferences
-5. Temporal Patterns: Look for any preferences in terms of music eras or contemporary vs. classic content
-
-For each recommendation:
-- Draw clear connections between multiple aspects of their musical profile
-- Explain how the recommendation aligns with specific elements of their taste
-- Ensure recommendations are culturally relevant to their location when applicable
-- Provide specific, actionable links to explore or purchase the recommended items
+When providing recommendations:
+1. NEVER repeat previous recommendations
+2. Ensure each recommendation is UNIQUE and specifically tailored to different aspects of the user's taste
+3. Draw deep connections between their musical preferences and the recommendations
+4. Consider the user's location and cultural context
+5. Provide specific, actionable recommendations with real links
+6. Analyze patterns across genres, artists, and listening habits to identify underlying preferences
 
 Format your response as a JSON array of objects, each with:
 - 'type' (specific category)
 - 'title' (specific name/place/item)
 - 'reason' (2-3 sentences explaining the deep connection to their musical profile)
-- 'link' (direct URL to explore/purchase)`;
+- 'link' (direct URL to explore/purchase)
+
+IMPORTANT: Each recommendation must be completely different from any previous ones, exploring new angles of their musical identity.`;
 
 serve(async (req) => {
-  console.log('Get recommendations function invoked');
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
-    }
+    const { musicData, previousRecommendations = [] } = await req.json();
+    console.log('Processing request for new recommendations');
+    console.log('Previous recommendations count:', previousRecommendations.length);
 
-    const { musicData, count = 14 } = await req.json();
-    console.log('Analyzing music data:', JSON.stringify(musicData));
-
-    // Create a rich musical profile analysis
+    // Create a comprehensive musical profile analysis
     const genreAnalysis = musicData.genres.length > 0 
       ? `Your diverse taste in ${musicData.genres.join(', ')} shows an appreciation for ${musicData.genres.length > 1 ? 'multiple musical traditions' : 'this specific musical tradition'}.`
       : '';
@@ -66,6 +57,10 @@ serve(async (req) => {
       ? `Being based in ${musicData.country} might influence your cultural preferences.`
       : '';
 
+    // Add previous recommendations to avoid duplicates
+    const previousTitles = previousRecommendations.map(r => r.title.toLowerCase());
+    const avoidList = `IMPORTANT: Do NOT recommend anything similar to these previous recommendations: ${previousTitles.join(', ')}`;
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -85,40 +80,30 @@ serve(async (req) => {
               ${trackAnalysis}
               ${playlistAnalysis}
               ${locationContext}
+              ${avoidList}
 
-              Provide ${count} cultural recommendations that would deeply resonate with this complete musical identity.
-              Ensure recommendations are evenly distributed across all categories.
-              Each recommendation must be a specific item with a direct URL to purchase/access it.
-              Make sure recommendations reflect the full breadth of their musical taste, not just one aspect.`
+              Provide 15 NEW and UNIQUE cultural recommendations that would deeply resonate with this musical identity.
+              Ensure each recommendation explores a different aspect of their taste and is NOT similar to previous recommendations.`
           }
         ],
-        temperature: 0.7,
+        temperature: 0.9, // Increased for more variety
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
-
-    let recommendations;
+    console.log('Successfully generated new recommendations');
+    
+    let recommendations = [];
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
-      console.log('Parsed recommendations:', JSON.stringify(recommendations));
+      console.log('Number of new recommendations:', recommendations.length);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', parseError);
-      recommendations = [
-        {
-          type: "Book",
-          title: "Please Kill Me: The Uncensored Oral History of Punk by Legs McNeil",
-          reason: "This comprehensive oral history connects deeply with various musical genres and artistic movements, perfect for understanding the evolution of alternative music culture.",
-          link: "https://www.goodreads.com/book/show/14595.Please_Kill_Me"
-        }
-      ];
+      throw new Error('Failed to parse recommendations');
     }
 
     return new Response(

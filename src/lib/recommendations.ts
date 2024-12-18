@@ -15,10 +15,18 @@ export interface MusicData {
   country?: string;
 }
 
-export const getRecommendations = async (musicData: MusicData, count = 14): Promise<Recommendation[]> => {
+export const getRecommendations = async (
+  musicData: MusicData, 
+  count = 14,
+  previousRecommendations: Recommendation[] = []
+): Promise<Recommendation[]> => {
   try {
     const { data, error } = await supabase.functions.invoke('get-recommendations', {
-      body: { musicData, count },
+      body: { 
+        musicData, 
+        count,
+        previousRecommendations 
+      },
     });
 
     if (error) throw error;
