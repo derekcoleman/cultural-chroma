@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { spotifyApi } from "@/lib/spotify";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const LandingHero = () => {
   const { toast } = useToast();
@@ -13,7 +14,47 @@ const LandingHero = () => {
       const result = await spotifyApi.authenticate();
       console.log('Authentication result:', result);
       
-      if (result.authenticated) {
+      if (result) {
+        // Get user profile from Spotify
+        const profile = await spotifyApi.currentUser.profile();
+        console.log('Spotify profile:', profile);
+
+        if (!profile.email) {
+          throw new Error('No email found in Spotify profile');
+        }
+
+        // Sign in or sign up with Supabase using Spotify email
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: profile.email,
+          password: `spotify-${profile.id}`, // Use Spotify ID as part of password
+        });
+
+        if (authError && authError.message.includes('Invalid login credentials')) {
+          // User doesn't exist, sign them up
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: profile.email,
+            password: `spotify-${profile.id}`,
+          });
+
+          if (signUpError) {
+            console.error('Sign up error:', signUpError);
+            throw signUpError;
+          }
+
+          // Update profile with Spotify display name
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ display_name: profile.display_name })
+            .eq('id', signUpData.user?.id);
+
+          if (profileError) {
+            console.error('Profile update error:', profileError);
+          }
+        } else if (authError) {
+          console.error('Auth error:', authError);
+          throw authError;
+        }
+
         toast({
           title: "Successfully connected to Spotify",
           description: "Redirecting to dashboard...",
