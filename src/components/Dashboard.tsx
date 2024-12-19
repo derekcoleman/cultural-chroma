@@ -15,6 +15,7 @@ import TopArtists from "./TopArtists";
 import RecommendationGrid from "./RecommendationGrid";
 import { ProfileSection } from "./ProfileSection";
 import { LoadingScreen } from "./LoadingScreen";
+import { ProfileMenu } from "./ProfileMenu";
 import type { Artist } from "@/types/spotify";
 import type { Recommendation, MusicData } from "@/lib/recommendations";
 
@@ -109,11 +110,16 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-spotify-black via-spotify-black to-spotify-darkgray text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center gap-4 mb-12">
-          <HeadphonesIcon className="h-12 w-12 text-spotify-green" />
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-spotify-lightgray bg-clip-text text-transparent">
-            Your Cultural Profile
-          </h1>
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <HeadphonesIcon className="h-12 w-12 text-spotify-green" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-spotify-lightgray bg-clip-text text-transparent">
+              Your Cultural Profile
+            </h1>
+          </div>
+          <div className="relative z-50">
+            <ProfileMenu />
+          </div>
         </div>
         
         <ProfileSection />
