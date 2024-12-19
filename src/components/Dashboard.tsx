@@ -27,9 +27,47 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Add subscription to profile changes
+  useEffect(() => {
+    const { data: subscription } = supabase
+      .channel('profile-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+      }, () => {
+        // When profile is updated, refresh recommendations
+        if (musicData) {
+          refreshRecommendations(musicData);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [musicData]);
+
   useEffect(() => {
     initializeSpotify();
   }, [navigate, toast]);
+
+  const refreshRecommendations = async (data: MusicData) => {
+    try {
+      setIsLoadingRecommendations(true);
+      const aiRecommendations = await getRecommendations(data);
+      setRecommendations(aiRecommendations);
+    } catch (error) {
+      console.error("Error refreshing recommendations:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to refresh recommendations",
+      });
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
 
   const handleLoadMore = (newRecommendations: Recommendation[]) => {
     setRecommendations(prevRecommendations => [...prevRecommendations, ...newRecommendations]);
