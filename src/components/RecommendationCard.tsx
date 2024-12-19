@@ -22,6 +22,9 @@ import {
   Film,
   TvMinimal
 } from "lucide-react";
+
+import { FeedbackButton } from "./FeedbackButton";
+
 import { Recommendation } from "@/lib/recommendations";
 
 interface RecommendationCardProps {
@@ -87,27 +90,33 @@ export const RecommendationCard = ({ recommendation, index }: RecommendationCard
         <p className="text-sm text-spotify-lightgray mb-6 line-clamp-3">
           {recommendation.reason}
         </p>
-        <a 
-          href={recommendation.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center text-spotify-green hover:text-white transition-colors text-sm font-medium"
-        >
-          Explore More
-          <svg
-            className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div className="flex items-center justify-between">
+          <a 
+            href={recommendation.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-spotify-green hover:text-white transition-colors text-sm font-medium"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </a>
+            Explore More
+            <svg
+              className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </a>
+          <FeedbackButton 
+            recommendationType={recommendation.type}
+            recommendationTitle={recommendation.title}
+          />
+        </div>
       </CardContent>
     </Card>
   );

@@ -75,18 +75,68 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
+          display_name: string | null
           id: string
+          preferred_categories: string[] | null
+          updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
+          display_name?: string | null
           id: string
+          preferred_categories?: string[] | null
+          updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
+          preferred_categories?: string[] | null
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      recommendation_feedback: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_positive: boolean
+          recommendation_title: string
+          recommendation_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_positive: boolean
+          recommendation_title: string
+          recommendation_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_positive?: boolean
+          recommendation_title?: string
+          recommendation_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
