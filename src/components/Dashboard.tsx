@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   // Add subscription to profile changes
   useEffect(() => {
-    const { data: subscription } = supabase
+    const subscription = supabase
       .channel('profile-changes')
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -44,7 +44,7 @@ const Dashboard = () => {
       .subscribe();
 
     return () => {
-      subscription?.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [musicData]);
 
