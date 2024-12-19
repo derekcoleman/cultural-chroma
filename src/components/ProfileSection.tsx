@@ -51,46 +51,51 @@ export const ProfileSection = () => {
 
     // Check if preferred categories have changed
     const categoriesChanged = JSON.stringify(profile?.preferred_categories) !== JSON.stringify(editedProfile.preferred_categories);
+    console.log('Categories changed:', categoriesChanged);
+    console.log('Old categories:', profile?.preferred_categories);
+    console.log('New categories:', editedProfile.preferred_categories);
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(editedProfile)
-      .eq('id', user.id);
+    try {
+      // First, update the profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(editedProfile)
+        .eq('id', user.id);
 
-    if (updateError) {
+      if (updateError) {
+        throw new Error('Failed to update profile');
+      }
+
+      // If categories changed, clear cached recommendations
+      if (categoriesChanged) {
+        console.log('Clearing cached recommendations...');
+        const { error: deleteError } = await supabase
+          .from('cached_recommendations')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (deleteError) {
+          throw new Error('Failed to clear cached recommendations');
+        }
+      }
+
+      setProfile({ ...profile, ...editedProfile } as Profile);
+      setIsEditing(false);
+      
+      toast({
+        title: "Success",
+        description: categoriesChanged 
+          ? "Profile updated and recommendations will be refreshed"
+          : "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to update profile",
       });
-      return;
     }
-
-    // If categories changed, clear cached recommendations
-    if (categoriesChanged) {
-      console.log('Categories changed, clearing cache...');
-      const { error: deleteError } = await supabase
-        .from('cached_recommendations')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (deleteError) {
-        console.error('Error clearing cached recommendations:', deleteError);
-        toast({
-          variant: "destructive",
-          title: "Warning",
-          description: "Profile updated but failed to refresh recommendations",
-        });
-        return;
-      }
-    }
-
-    setProfile({ ...profile, ...editedProfile } as Profile);
-    setIsEditing(false);
-    toast({
-      title: "Success",
-      description: "Profile updated successfully",
-    });
   };
 
   const toggleCategory = (categoryId: string) => {
