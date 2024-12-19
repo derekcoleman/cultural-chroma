@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Book, 
   Plane, 
-  Shirt, 
+  ShoppingBag, 
   Tv,
   Home,
   UtensilsCrossed,
@@ -13,9 +13,14 @@ import {
   CalendarDays,
   Headphones,
   Newspaper,
-  Film,
+  Clapperboard,
   Music2,
-  LucideIcon
+  LucideIcon,
+  Shirt,
+  Frame,
+  Speaker,
+  Film,
+  TvMinimal
 } from "lucide-react";
 import { Recommendation } from "@/lib/recommendations";
 
@@ -29,14 +34,20 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "book": Book,
   "travel": Plane,
   "fashion": Shirt,
-  "movies & tv": Tv,
-  "home décor & art": Home,
+  "clothing": ShoppingBag,
+  "movies & tv": Film,
+  "movie": Clapperboard,
+  "tv show": TvMinimal,
+  "television": Tv,
+  "home décor & art": Frame,
+  "art installation": Palette,
   "food & drink": UtensilsCrossed,
   "online courses": GraduationCap,
   "hobbies & crafts": Palette,
   "wellness": Heart,
   "tech & gadgets": Laptop,
   "cultural events": CalendarDays,
+  "concert": Speaker,
   "podcasts": Headphones,
   "magazines": Newspaper,
   "cultural media": Film,
