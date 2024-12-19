@@ -16,7 +16,11 @@ interface Profile {
   preferred_categories: string[];
 }
 
-export const ProfileSection = () => {
+interface ProfileSectionProps {
+  onClose?: () => void;
+}
+
+export const ProfileSection = ({ onClose }: ProfileSectionProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Partial<Profile>>({});
@@ -69,6 +73,11 @@ export const ProfileSection = () => {
       title: "Success",
       description: "Profile updated successfully",
     });
+    
+    // Call onClose after successful save if provided
+    if (onClose) {
+      onClose();
+    }
   };
 
   const toggleCategory = (categoryId: string) => {
