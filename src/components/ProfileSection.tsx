@@ -49,6 +49,9 @@ export const ProfileSection = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Check if preferred categories have changed
+    const categoriesChanged = JSON.stringify(profile?.preferred_categories) !== JSON.stringify(editedProfile.preferred_categories);
+
     const { error } = await supabase
       .from('profiles')
       .update(editedProfile)
@@ -61,6 +64,18 @@ export const ProfileSection = () => {
         description: "Failed to update profile",
       });
       return;
+    }
+
+    // If categories changed, clear cached recommendations
+    if (categoriesChanged) {
+      const { error: cacheError } = await supabase
+        .from('cached_recommendations')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (cacheError) {
+        console.error('Error clearing cached recommendations:', cacheError);
+      }
     }
 
     setProfile({ ...profile, ...editedProfile } as Profile);
