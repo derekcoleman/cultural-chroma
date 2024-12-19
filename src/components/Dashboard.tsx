@@ -21,6 +21,7 @@ import type { Recommendation, MusicData } from "@/lib/recommendations";
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
+  const [topTracks, setTopTracks] = useState<{ name: string; artist: string; }[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [musicData, setMusicData] = useState<MusicData | null>(null);
@@ -40,7 +41,7 @@ const Dashboard = () => {
       const accessToken = await spotifyApi.authenticate();
       
       if (accessToken) {
-        const [artistsResponse, tracks, playlists, profile] = await Promise.all([
+        const [artistsResponse, tracksResponse, playlists, profile] = await Promise.all([
           getTopArtists(),
           getTopTracks(),
           getUserPlaylists(),
@@ -53,7 +54,13 @@ const Dashboard = () => {
           id: artist.id
         }));
 
+        const tracks = tracksResponse.map(track => ({
+          name: track.name,
+          artist: track.artists[0].name
+        }));
+
         setTopArtists(artists);
+        setTopTracks(tracks);
         
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -73,10 +80,7 @@ const Dashboard = () => {
         const newMusicData: MusicData = {
           genres: [...new Set(artists.flatMap(artist => artist.genres))],
           artists: artists.map(a => a.name),
-          tracks: tracks.map(t => ({
-            name: t.name,
-            artist: t.artists[0].name
-          })),
+          tracks: tracks,
           playlists: playlists.map(playlist => playlist.name),
           country: profile.country,
         };
@@ -122,7 +126,7 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <CultureProfile artists={topArtists} />
+        <CultureProfile artists={topArtists} tracks={topTracks} />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           <div className="lg:col-span-1">

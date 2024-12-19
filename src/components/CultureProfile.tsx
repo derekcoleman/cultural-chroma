@@ -4,22 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Expand } from "lucide-react";
 import { Artist } from "@/types/spotify";
 
-interface CultureProfileProps {
-  artists: Artist[];
+interface Track {
+  name: string;
+  artist: string;
 }
 
-const CultureProfile = ({ artists }: CultureProfileProps) => {
+interface CultureProfileProps {
+  artists: Artist[];
+  tracks?: { name: string; artist: string; }[];
+}
+
+const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Get unique genres from all artists
   const allGenres = [...new Set(artists.flatMap(artist => artist.genres))];
   
-  // Create a brief summary based on top genres
+  // Get unique artists including both top artists and track artists
+  const allArtists = new Set([
+    ...artists.map(a => a.name),
+    ...tracks.map(t => t.artist)
+  ]);
+
+  // Create a brief summary based on musical profile
   const createBriefSummary = () => {
     if (allGenres.length === 0) return "Start adding music to see your cultural profile";
     
     const topGenres = allGenres.slice(0, 3);
-    return `Your music taste suggests an affinity for ${topGenres.join(", ")}`;
+    const artistCount = allArtists.size;
+    
+    return `Your music library includes ${artistCount} artists across genres like ${topGenres.join(", ")}`;
   };
 
   // Create a detailed cultural analysis
@@ -56,15 +70,21 @@ const CultureProfile = ({ artists }: CultureProfileProps) => {
     });
 
     const tags = Array.from(aestheticTags).slice(0, 5);
+    const artistCount = allArtists.size;
+    const trackCount = tracks.length;
+    const genreCount = allGenres.length;
     
-    return `Based on your music preferences, particularly your interest in ${allGenres.slice(0, 3).join(", ")}, 
-    your cultural profile suggests an appreciation for ${tags.join(", ")} aesthetics. 
-    This unique combination often correlates with a taste for:
+    return `Your musical profile spans ${artistCount} artists, ${trackCount} tracks, and ${genreCount} genres, 
+    with particular emphasis on ${allGenres.slice(0, 3).join(", ")}. This diverse collection suggests 
+    an appreciation for ${tags.join(", ")} aesthetics.
     
-    • Design: ${tags.includes("modern") ? "Contemporary and minimalist" : "Classic and timeless"} pieces
-    • Travel: ${tags.includes("urban") ? "Vibrant city exploration" : "Nature and cultural immersion"}
-    • Fashion: ${tags.includes("bold") ? "Statement pieces and unique designs" : "Refined and classic styles"}
-    • Literature: ${tags.includes("contemporary") ? "Modern narratives and fresh perspectives" : "Classic literature and thoughtful essays"}
+    Based on this comprehensive musical identity, your cultural preferences likely align with:
+    
+    • Design: ${tags.includes("modern") ? "Contemporary and minimalist designs with clean lines" : "Classic and timeless pieces with attention to detail"}
+    • Travel: ${tags.includes("urban") ? "Urban exploration and cultural hotspots" : "Nature retreats and authentic local experiences"}
+    • Fashion: ${tags.includes("bold") ? "Statement pieces and avant-garde designs" : "Refined, classic styles with quality materials"}
+    • Literature: ${tags.includes("contemporary") ? "Modern narratives and cutting-edge perspectives" : "Thoughtful essays and timeless classics"}
+    • Art: ${tags.includes("creative") ? "Experimental and boundary-pushing works" : "Traditional techniques and established masters"}
     `;
   };
 
