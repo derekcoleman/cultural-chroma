@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 
 import { FeedbackButton } from "./FeedbackButton";
-import type { Recommendation } from "@/types/recommendations";
+
+import { Recommendation } from "@/lib/recommendations";
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
@@ -120,4 +121,3 @@ export const RecommendationCard = ({ recommendation, index }: RecommendationCard
     </Card>
   );
 };
-

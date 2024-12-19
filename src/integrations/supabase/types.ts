@@ -9,35 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      cached_recommendations: {
-        Row: {
-          created_at: string
-          id: string
-          recommendations: Json
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          recommendations: Json
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          recommendations?: Json
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cached_recommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       favorite_artists: {
         Row: {
           artist_name: string

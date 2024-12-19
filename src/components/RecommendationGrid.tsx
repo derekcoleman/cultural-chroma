@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus } from "lucide-react";
-import { getRecommendations } from "@/lib/recommendations";
-import type { Recommendation, MusicData } from "@/types/recommendations";
+import { Recommendation, getRecommendations, MusicData } from "@/lib/recommendations";
 import { useToast } from "@/components/ui/use-toast";
 import { RecommendationCard } from "./RecommendationCard";
 import { CategoryFilter } from "./CategoryFilter";
@@ -38,12 +37,7 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
       const allPreviousRecommendations = [...previousRecommendations, ...recommendations];
       setPreviousRecommendations(allPreviousRecommendations);
       
-      const newRecommendations = await getRecommendations(
-        musicData, 
-        15, 
-        allPreviousRecommendations,
-        selectedType !== "all" ? selectedType : undefined
-      );
+      const newRecommendations = await getRecommendations(musicData, 15, allPreviousRecommendations);
       
       if (newRecommendations.length === 0) {
         toast({

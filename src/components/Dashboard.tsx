@@ -16,58 +16,19 @@ import RecommendationGrid from "./RecommendationGrid";
 import { LoadingScreen } from "./LoadingScreen";
 import { ProfileMenu } from "./ProfileMenu";
 import type { Artist } from "@/types/spotify";
-import type { Recommendation, MusicData } from "@/types/recommendations";
+import type { Recommendation, MusicData } from "@/lib/recommendations";
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [musicData, setMusicData] = useState<MusicData | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Add subscription to profile changes
-  useEffect(() => {
-    const subscription = supabase
-      .channel('profile-changes')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'profiles',
-      }, () => {
-        // When profile is updated, refresh recommendations
-        if (musicData) {
-          refreshRecommendations(musicData);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [musicData]);
-
   useEffect(() => {
     initializeSpotify();
   }, [navigate, toast]);
-
-  const refreshRecommendations = async (data: MusicData) => {
-    try {
-      setIsLoadingRecommendations(true);
-      const aiRecommendations = await getRecommendations(data);
-      setRecommendations(aiRecommendations);
-    } catch (error) {
-      console.error("Error refreshing recommendations:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to refresh recommendations",
-      });
-    } finally {
-      setIsLoadingRecommendations(false);
-    }
-  };
 
   const handleLoadMore = (newRecommendations: Recommendation[]) => {
     setRecommendations(prevRecommendations => [...prevRecommendations, ...newRecommendations]);
@@ -75,7 +36,6 @@ const Dashboard = () => {
 
   const initializeSpotify = async () => {
     try {
-      setIsLoadingRecommendations(true);
       const accessToken = await spotifyApi.authenticate();
       
       if (accessToken) {
@@ -138,12 +98,11 @@ const Dashboard = () => {
       });
       navigate("/");
     } finally {
-      setIsInitialLoading(false);
-      setIsLoadingRecommendations(false);
+      setIsLoading(false);
     }
   };
 
-  if (isInitialLoading) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
@@ -171,17 +130,11 @@ const Dashboard = () => {
               <Music2 className="h-6 w-6 text-spotify-green" />
               <h2 className="text-2xl font-semibold">AI-Powered Recommendations</h2>
             </div>
-            {isLoadingRecommendations ? (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <LoadingScreen />
-              </div>
-            ) : (
-              <RecommendationGrid 
-                recommendations={recommendations} 
-                musicData={musicData}
-                onLoadMore={handleLoadMore}
-              />
-            )}
+            <RecommendationGrid 
+              recommendations={recommendations} 
+              musicData={musicData}
+              onLoadMore={handleLoadMore}
+            />
           </div>
         </div>
       </div>
