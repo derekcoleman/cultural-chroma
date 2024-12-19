@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Expand, ArrowRight } from "lucide-react";
+import { Expand, ArrowRight, Twitter, Instagram } from "lucide-react";
 import { Artist } from "@/types/spotify";
 
 interface Track {
@@ -26,14 +26,68 @@ const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
     ...tracks.map(t => t.artist)
   ]);
 
+  // Generate a fun nickname based on musical profile
+  const generateNickname = () => {
+    const prefixes = {
+      jazz: "Jazz Cat",
+      classical: "Maestro",
+      rock: "Rock Star",
+      electronic: "Digital Nomad",
+      folk: "Folk Soul",
+      pop: "Pop Icon",
+      indie: "Indie Spirit",
+      metal: "Metal Warrior",
+      hip: "Hip Hop Head",
+      rap: "Flow Master",
+      soul: "Soul Seeker",
+      blues: "Blues Wanderer",
+      country: "Country Heart",
+      reggae: "Reggae Rider",
+      latin: "Latin Groove"
+    };
+
+    const suffixes = [
+      "Extraordinaire",
+      "Supreme",
+      "of the Digital Age",
+      "of the Underground",
+      "of the Future",
+      "in Training",
+      "2.0",
+      "Ultimate",
+      "Mastermind",
+      "Guru"
+    ];
+
+    // Find the most common genre category
+    const baseGenre = Object.keys(prefixes).find(key => 
+      allGenres.some(genre => genre.toLowerCase().includes(key))
+    ) || "music";
+
+    const prefix = prefixes[baseGenre] || "Melody Master";
+    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+
+    return `${prefix} ${suffix}`;
+  };
+
+  // Create share text for social media
+  const createShareText = () => {
+    const nickname = generateNickname();
+    const topGenres = allGenres.slice(0, 3).join(", ");
+    return encodeURIComponent(
+      `🎵 I'm a "${nickname}" according to my Spotify analysis!\n\nMy musical journey spans ${allArtists.size} artists and ${allGenres.length} genres, with a focus on ${topGenres}.\n\nDiscover your musical identity at culturalprofile.app 🎧`
+    );
+  };
+
   // Create a brief summary based on musical profile
   const createBriefSummary = () => {
     if (allGenres.length === 0) return "Start adding music to see your cultural profile";
     
     const topGenres = allGenres.slice(0, 3);
     const artistCount = allArtists.size;
+    const nickname = generateNickname();
     
-    return `Based on ${artistCount} artists and ${tracks.length} tracks, your music spans genres like ${topGenres.join(", ")}`;
+    return `You're a "${nickname}" with ${artistCount} artists and ${tracks.length} tracks, spanning genres like ${topGenres.join(", ")}`;
   };
 
   // Create a detailed cultural analysis
@@ -73,8 +127,11 @@ const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
     const artistCount = allArtists.size;
     const trackCount = tracks.length;
     const genreCount = allGenres.length;
+    const nickname = generateNickname();
     
     return `Your Musical Identity & Cultural Preferences
+
+Congratulations! You've earned the title: "${nickname}" 🎉
 
 Your musical journey encompasses ${artistCount} unique artists and ${trackCount} tracks, spanning ${genreCount} diverse genres. 
 This rich tapestry of sound, particularly focused on ${allGenres.slice(0, 3).join(", ")}, reveals fascinating insights about your cultural preferences.
@@ -99,7 +156,15 @@ Cultural Consumption
 ${tags.includes("contemporary") ? "• You stay current with emerging artists and cultural movements" : "• You appreciate established masters and enduring works"}
 ${tags.includes("authentic") ? "• You seek out genuine, unfiltered cultural experiences" : "• You value curated, refined cultural expressions"}
 
-This profile is dynamically generated based on your music library, reflecting how your musical taste connects to broader cultural preferences and lifestyle choices.`;
+Share your unique cultural identity with others and discover how your musical taste shapes your broader cultural preferences!`;
+  };
+
+  const handleShare = (platform: 'twitter' | 'instagram') => {
+    const shareText = createShareText();
+    const url = platform === 'twitter' 
+      ? `https://twitter.com/intent/tweet?text=${shareText}`
+      : `https://www.instagram.com/create/story?text=${shareText}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -115,8 +180,8 @@ This profile is dynamically generated based on your music library, reflecting ho
               <div>
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   Your Cultural Profile
-                  <span className="text-sm font-normal text-spotify-lightgray">
-                    (Click to explore)
+                  <span className="text-sm font-normal text-spotify-lightgray animate-pulse">
+                    (Click to explore your unique identity!)
                   </span>
                 </h3>
                 <p className="text-sm text-spotify-lightgray">{createBriefSummary()}</p>
@@ -127,8 +192,26 @@ This profile is dynamically generated based on your music library, reflecting ho
         </DialogTrigger>
         <DialogContent className="bg-spotify-black text-white border-spotify-darkgray max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-spotify-green pb-4">
-              Your Cultural Profile Analysis
+            <DialogTitle className="text-2xl font-bold text-spotify-green pb-4 flex items-center justify-between">
+              <span>Your Cultural Profile Analysis</span>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-spotify-lightgray hover:text-white"
+                  onClick={() => handleShare('twitter')}
+                >
+                  <Twitter className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-spotify-lightgray hover:text-white"
+                  onClick={() => handleShare('instagram')}
+                >
+                  <Instagram className="h-5 w-5" />
+                </Button>
+              </div>
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4 space-y-6 text-spotify-lightgray">
