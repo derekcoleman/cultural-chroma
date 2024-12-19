@@ -13,7 +13,6 @@ import { getRecommendations } from "@/lib/recommendations";
 import { supabase } from "@/integrations/supabase/client";
 import TopArtists from "./TopArtists";
 import RecommendationGrid from "./RecommendationGrid";
-import { ProfileSection } from "./ProfileSection";
 import { LoadingScreen } from "./LoadingScreen";
 import { ProfileMenu } from "./ProfileMenu";
 import type { Artist } from "@/types/spotify";
@@ -121,8 +120,6 @@ const Dashboard = () => {
             <ProfileMenu />
           </div>
         </div>
-        
-        <ProfileSection />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           <div className="lg:col-span-1">
