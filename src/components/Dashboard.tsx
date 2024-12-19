@@ -15,6 +15,7 @@ import TopArtists from "./TopArtists";
 import RecommendationGrid from "./RecommendationGrid";
 import { LoadingScreen } from "./LoadingScreen";
 import { ProfileMenu } from "./ProfileMenu";
+import CultureProfile from "./CultureProfile";
 import type { Artist } from "@/types/spotify";
 import type { Recommendation, MusicData } from "@/lib/recommendations";
 
@@ -120,6 +121,8 @@ const Dashboard = () => {
             <ProfileMenu />
           </div>
         </div>
+        
+        <CultureProfile artists={topArtists} />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           <div className="lg:col-span-1">
