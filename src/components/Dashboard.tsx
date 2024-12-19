@@ -21,7 +21,8 @@ import type { Recommendation, MusicData } from "@/lib/recommendations";
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [musicData, setMusicData] = useState<MusicData | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -36,6 +37,7 @@ const Dashboard = () => {
 
   const initializeSpotify = async () => {
     try {
+      setIsLoadingRecommendations(true);
       const accessToken = await spotifyApi.authenticate();
       
       if (accessToken) {
@@ -98,11 +100,12 @@ const Dashboard = () => {
       });
       navigate("/");
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
+      setIsLoadingRecommendations(false);
     }
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return <LoadingScreen />;
   }
 
@@ -130,11 +133,17 @@ const Dashboard = () => {
               <Music2 className="h-6 w-6 text-spotify-green" />
               <h2 className="text-2xl font-semibold">AI-Powered Recommendations</h2>
             </div>
-            <RecommendationGrid 
-              recommendations={recommendations} 
-              musicData={musicData}
-              onLoadMore={handleLoadMore}
-            />
+            {isLoadingRecommendations ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <LoadingScreen />
+              </div>
+            ) : (
+              <RecommendationGrid 
+                recommendations={recommendations} 
+                musicData={musicData}
+                onLoadMore={handleLoadMore}
+              />
+            )}
           </div>
         </div>
       </div>
