@@ -17,6 +17,8 @@ When providing recommendations:
 4. Consider the user's location and cultural context
 5. Provide specific, actionable recommendations with real links
 6. Analyze patterns across genres, artists, and listening habits to identify underlying preferences
+7. If preferred categories are provided, prioritize those categories in recommendations
+8. If a specific category is selected, ONLY provide recommendations from that category
 
 Format your response as a JSON array of objects, each with:
 - 'type' (specific category)
@@ -27,7 +29,6 @@ Format your response as a JSON array of objects, each with:
 IMPORTANT: Each recommendation must be completely different from any previous ones, exploring new angles of their musical identity.`;
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -40,14 +41,22 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
-    const { musicData, previousRecommendations = [], count = 15 } = await req.json();
+    const { 
+      musicData, 
+      previousRecommendations = [], 
+      count = 15,
+      selectedCategory,
+      preferredCategories = []
+    } = await req.json();
     
     console.log('Received request with:', {
       genres: musicData?.genres?.length,
       artists: musicData?.artists?.length,
       tracks: musicData?.tracks?.length,
       previousRecommendations: previousRecommendations?.length,
-      requestedCount: count
+      requestedCount: count,
+      selectedCategory,
+      preferredCategories
     });
 
     if (!musicData || !musicData.genres || !musicData.artists || !musicData.tracks) {
@@ -75,10 +84,15 @@ serve(async (req) => {
       ? `Being based in ${musicData.country} might influence your cultural preferences.`
       : '';
 
-    // Add previous recommendations to avoid duplicates
     const previousTitles = previousRecommendations.map(r => r.title.toLowerCase());
     const avoidList = previousTitles.length > 0
       ? `IMPORTANT: Do NOT recommend anything similar to these previous recommendations: ${previousTitles.join(', ')}`
+      : '';
+
+    const categoryContext = selectedCategory
+      ? `IMPORTANT: ONLY provide recommendations in the ${selectedCategory} category.`
+      : preferredCategories.length > 0
+      ? `Prioritize recommendations in these categories: ${preferredCategories.join(', ')}`
       : '';
 
     console.log('Making OpenAI API request');
@@ -102,9 +116,11 @@ serve(async (req) => {
               ${trackAnalysis}
               ${playlistAnalysis}
               ${locationContext}
+              ${categoryContext}
               ${avoidList}
 
               Provide ${count} NEW and UNIQUE cultural recommendations that would deeply resonate with this musical identity.
+              ${selectedCategory ? `Remember: ONLY provide recommendations in the ${selectedCategory} category.` : ''}
               Ensure each recommendation explores a different aspect of their taste and is NOT similar to previous recommendations.`
           }
         ],

@@ -18,14 +18,33 @@ export interface MusicData {
 export const getRecommendations = async (
   musicData: MusicData, 
   count = 14,
-  previousRecommendations: Recommendation[] = []
+  previousRecommendations: Recommendation[] = [],
+  selectedCategory?: string
 ): Promise<Recommendation[]> => {
   try {
+    // Get user's preferred categories
+    const { data: { user } } = await supabase.auth.getUser();
+    let preferredCategories: string[] = [];
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('preferred_categories')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.preferred_categories) {
+        preferredCategories = profile.preferred_categories;
+      }
+    }
+
     const { data, error } = await supabase.functions.invoke('get-recommendations', {
       body: { 
         musicData, 
         count,
-        previousRecommendations 
+        previousRecommendations,
+        selectedCategory,
+        preferredCategories
       },
     });
 

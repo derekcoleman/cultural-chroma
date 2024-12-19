@@ -37,7 +37,12 @@ const RecommendationGrid = ({ recommendations, musicData, onLoadMore }: Recommen
       const allPreviousRecommendations = [...previousRecommendations, ...recommendations];
       setPreviousRecommendations(allPreviousRecommendations);
       
-      const newRecommendations = await getRecommendations(musicData, 15, allPreviousRecommendations);
+      const newRecommendations = await getRecommendations(
+        musicData, 
+        15, 
+        allPreviousRecommendations,
+        selectedType !== "all" ? selectedType : undefined
+      );
       
       if (newRecommendations.length === 0) {
         toast({
