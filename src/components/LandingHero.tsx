@@ -14,34 +14,35 @@ const LandingHero = () => {
       const result = await spotifyApi.authenticate();
       console.log('Authentication result:', result);
       
-      if (result.authenticated) {
+      if (result) {
         // Get Spotify user profile
         const profile = await spotifyApi.currentUser.profile();
         console.log('Spotify profile:', profile);
 
-        // Sign up/in with Supabase using Spotify email
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        if (!profile.email) {
+          throw new Error('Email not available from Spotify profile');
+        }
+
+        // Try to sign in first
+        let { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
           email: profile.email,
-          password: `spotify-${profile.id}`, // Using Spotify ID as part of password
+          password: `spotify-${profile.id}`,
         });
 
-        if (authError && authError.message.includes('Invalid login credentials')) {
-          // User doesn't exist, create them
+        // If sign in fails, create a new account
+        if (signInError) {
+          console.log('User does not exist, creating new account...');
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: profile.email,
             password: `spotify-${profile.id}`,
-            options: {
-              data: {
-                spotify_id: profile.id,
-                display_name: profile.display_name,
-              },
-            },
           });
 
           if (signUpError) {
             console.error('Error creating user:', signUpError);
             throw signUpError;
           }
+
+          authData = signUpData;
 
           // Update the profile with Spotify data
           const { error: profileError } = await supabase
