@@ -30,6 +30,10 @@ const Dashboard = () => {
     initializeSpotify();
   }, [navigate, toast]);
 
+  const handleLoadMore = (newRecommendations: Recommendation[]) => {
+    setRecommendations(prevRecommendations => [...prevRecommendations, ...newRecommendations]);
+  };
+
   const initializeSpotify = async () => {
     try {
       const accessToken = await spotifyApi.authenticate();
