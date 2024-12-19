@@ -16,7 +16,7 @@ import RecommendationGrid from "./RecommendationGrid";
 import { LoadingScreen } from "./LoadingScreen";
 import { ProfileMenu } from "./ProfileMenu";
 import type { Artist } from "@/types/spotify";
-import type { Recommendation, MusicData } from "@/lib/recommendations";
+import type { Recommendation, MusicData } from "@/types/recommendations";
 
 const Dashboard = () => {
   const [topArtists, setTopArtists] = useState<Artist[]>([]);

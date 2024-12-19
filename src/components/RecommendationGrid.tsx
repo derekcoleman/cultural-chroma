@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus } from "lucide-react";
-import { Recommendation, getRecommendations, MusicData } from "@/lib/recommendations";
+import { getRecommendations } from "@/lib/recommendations";
+import type { Recommendation, MusicData } from "@/types/recommendations";
 import { useToast } from "@/components/ui/use-toast";
 import { RecommendationCard } from "./RecommendationCard";
 import { CategoryFilter } from "./CategoryFilter";

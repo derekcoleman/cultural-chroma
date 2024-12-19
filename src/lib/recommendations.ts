@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Recommendation, MusicData } from "@/types/recommendations";
+import type { Json } from "@/integrations/supabase/types";
 
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour in milliseconds
 
@@ -25,7 +26,7 @@ export const getRecommendations = async (
       const cacheAge = Date.now() - new Date(cachedData.created_at).getTime();
       if (cacheAge < CACHE_DURATION) {
         console.log('Using cached recommendations');
-        return cachedData.recommendations as Recommendation[];
+        return cachedData.recommendations as unknown as Recommendation[];
       }
     }
 
@@ -62,7 +63,7 @@ export const getRecommendations = async (
         .from('cached_recommendations')
         .upsert({
           user_id: user.id,
-          recommendations: recommendations,
+          recommendations: recommendations as unknown as Json,
         });
 
       if (upsertError) {
