@@ -50,26 +50,26 @@ serve(async (req) => {
       requestedCount: count
     });
 
-    if (!musicData) {
-      throw new Error('No music data provided');
+    if (!musicData || !musicData.genres || !musicData.artists || !musicData.tracks) {
+      throw new Error('Invalid music data structure provided');
     }
 
     // Create a comprehensive musical profile analysis
-    const genreAnalysis = musicData.genres?.length > 0 
+    const genreAnalysis = musicData.genres.length > 0 
       ? `Your diverse taste in ${musicData.genres.join(', ')} shows an appreciation for ${musicData.genres.length > 1 ? 'multiple musical traditions' : 'this specific musical tradition'}.`
-      : '';
+      : 'No genre information available.';
     
-    const artistAnalysis = musicData.artists?.length > 0
+    const artistAnalysis = musicData.artists.length > 0
       ? `You follow artists like ${musicData.artists.join(', ')}, indicating an interest in various musical styles and perspectives.`
-      : '';
+      : 'No artist information available.';
 
-    const trackAnalysis = musicData.tracks?.length > 0
+    const trackAnalysis = musicData.tracks.length > 0
       ? `Your top tracks include ${musicData.tracks.map(t => `${t.name} by ${t.artist}`).join(', ')}, showing your specific music preferences.`
-      : '';
+      : 'No track information available.';
 
     const playlistAnalysis = musicData.playlists?.length > 0
       ? `Your playlists like ${musicData.playlists.join(', ')} suggest curated music experiences that matter to you.`
-      : '';
+      : 'No playlist information available.';
 
     const locationContext = musicData.country
       ? `Being based in ${musicData.country} might influence your cultural preferences.`
@@ -77,7 +77,9 @@ serve(async (req) => {
 
     // Add previous recommendations to avoid duplicates
     const previousTitles = previousRecommendations.map(r => r.title.toLowerCase());
-    const avoidList = `IMPORTANT: Do NOT recommend anything similar to these previous recommendations: ${previousTitles.join(', ')}`;
+    const avoidList = previousTitles.length > 0
+      ? `IMPORTANT: Do NOT recommend anything similar to these previous recommendations: ${previousTitles.join(', ')}`
+      : '';
 
     console.log('Making OpenAI API request');
 
@@ -88,7 +90,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { 
@@ -106,27 +108,53 @@ serve(async (req) => {
               Ensure each recommendation explores a different aspect of their taste and is NOT similar to previous recommendations.`
           }
         ],
-        temperature: 1.0, // Increased for more variety
+        temperature: 1.0,
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      data = JSON.parse(responseText);
+    } catch (error) {
+      console.error('Failed to parse OpenAI response:', error);
+      console.log('Raw response:', responseText);
+      throw new Error('Invalid response from OpenAI API');
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      console.error('OpenAI API error:', data);
+      throw new Error(`OpenAI API error: ${response.status} - ${JSON.stringify(data)}`);
+    }
+
+    if (!data.choices?.[0]?.message?.content) {
+      console.error('Unexpected OpenAI response structure:', data);
+      throw new Error('Unexpected response structure from OpenAI API');
+    }
+
     console.log('Successfully received OpenAI response');
     
     let recommendations = [];
     try {
       recommendations = JSON.parse(data.choices[0].message.content);
       console.log('Successfully parsed recommendations:', recommendations.length);
+      
+      if (!Array.isArray(recommendations)) {
+        throw new Error('Recommendations must be an array');
+      }
+      
+      // Validate recommendation structure
+      recommendations.forEach((rec, index) => {
+        if (!rec.type || !rec.title || !rec.reason || !rec.link) {
+          throw new Error(`Invalid recommendation structure at index ${index}`);
+        }
+      });
+      
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', parseError);
-      console.log('Raw response content:', data.choices[0].message.content);
-      throw new Error('Failed to parse recommendations');
+      console.error('Failed to parse recommendations:', parseError);
+      console.log('Raw content:', data.choices[0].message.content);
+      throw new Error('Failed to parse recommendations from OpenAI response');
     }
 
     return new Response(
