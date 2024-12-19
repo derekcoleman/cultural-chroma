@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,32 @@ export const FeedbackButton = ({ recommendationType, recommendationTitle }: Feed
   const [isPositive, setIsPositive] = useState<boolean | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const loadExistingFeedback = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('recommendation_feedback')
+        .select('is_positive')
+        .eq('user_id', user.id)
+        .eq('recommendation_type', recommendationType)
+        .eq('recommendation_title', recommendationTitle)
+        .single();
+
+      if (error) {
+        console.error('Error loading feedback:', error);
+        return;
+      }
+
+      if (data) {
+        setIsPositive(data.is_positive);
+      }
+    };
+
+    loadExistingFeedback();
+  }, [recommendationType, recommendationTitle]);
+
   const handleFeedback = async (positive: boolean) => {
     if (isPositive === positive) return;
 
@@ -24,6 +50,25 @@ export const FeedbackButton = ({ recommendationType, recommendationTitle }: Feed
         description: "You must be logged in to provide feedback",
       });
       return;
+    }
+
+    // If there's existing feedback, delete it first
+    if (isPositive !== null) {
+      const { error: deleteError } = await supabase
+        .from('recommendation_feedback')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('recommendation_type', recommendationType)
+        .eq('recommendation_title', recommendationTitle);
+
+      if (deleteError) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update feedback",
+        });
+        return;
+      }
     }
 
     const { error } = await supabase
