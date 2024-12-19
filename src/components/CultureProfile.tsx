@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { expand } from "lucide-react";
+import { Expand } from "lucide-react";
 import { Artist } from "@/types/spotify";
 
 interface CultureProfileProps {
@@ -76,7 +76,7 @@ const CultureProfile = ({ artists }: CultureProfileProps) => {
             variant="ghost" 
             className="w-full text-left flex items-center gap-2 hover:bg-spotify-darkgray/80"
           >
-            <expand className="h-5 w-5 text-spotify-green" />
+            <Expand className="h-5 w-5 text-spotify-green" />
             <div>
               <h3 className="text-lg font-semibold text-white">Your Cultural Profile</h3>
               <p className="text-sm text-spotify-lightgray">{createBriefSummary()}</p>
