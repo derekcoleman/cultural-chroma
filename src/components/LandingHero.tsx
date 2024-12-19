@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { spotifyApi } from "@/lib/spotify";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 const LandingHero = () => {
   const { toast } = useToast();
@@ -11,60 +10,16 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
-      const accessToken = await spotifyApi.authenticate();
-      console.log('Authentication result:', accessToken);
+      const result = await spotifyApi.authenticate();
+      console.log('Authentication result:', result);
       
-      if (!accessToken) {
-        throw new Error('Failed to authenticate with Spotify');
-      }
-
-      // Get Spotify user profile
-      const profile = await spotifyApi.currentUser.profile();
-      console.log('Spotify profile:', profile);
-
-      if (!profile.email) {
-        throw new Error('Email not available from Spotify profile');
-      }
-
-      // Try to sign in first
-      let { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: profile.email,
-        password: `spotify-${profile.id}`,
-      });
-
-      // If sign in fails, create a new account
-      if (signInError) {
-        console.log('User does not exist, creating new account...');
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: profile.email,
-          password: `spotify-${profile.id}`,
+      if (result.authenticated) {
+        toast({
+          title: "Successfully connected to Spotify",
+          description: "Redirecting to dashboard...",
         });
-
-        if (signUpError) {
-          console.error('Error creating user:', signUpError);
-          throw signUpError;
-        }
-
-        authData = signUpData;
-
-        // Update the profile with Spotify data
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            display_name: profile.display_name,
-          })
-          .eq('id', signUpData.user?.id);
-
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-        }
+        navigate('/dashboard');
       }
-
-      toast({
-        title: "Successfully connected to Spotify",
-        description: "Redirecting to dashboard...",
-      });
-      navigate('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
       toast({
