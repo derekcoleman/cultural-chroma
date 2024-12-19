@@ -25,6 +25,7 @@ interface RecommendationCardProps {
 }
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  "books": Book,
   "book": Book,
   "travel": Plane,
   "fashion": Shirt,
@@ -39,12 +40,19 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "podcasts": Headphones,
   "magazines": Newspaper,
   "cultural media": Film,
+  "music": Music2
 };
 
 export const RecommendationCard = ({ recommendation, index }: RecommendationCardProps) => {
   const getIcon = (type: string) => {
-    const normalizedType = type.toLowerCase();
-    const IconComponent = CATEGORY_ICONS[normalizedType] || Music2;
+    const normalizedType = type.toLowerCase().trim();
+    const IconComponent = CATEGORY_ICONS[normalizedType];
+    
+    if (!IconComponent) {
+      console.warn(`No icon found for category: ${type}`);
+      return <Music2 className="h-5 w-5" />;
+    }
+    
     return <IconComponent className="h-5 w-5" />;
   };
 
