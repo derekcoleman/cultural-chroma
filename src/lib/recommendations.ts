@@ -1,20 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-export interface Recommendation {
-  type: string;
-  title: string;
-  reason: string;
-  link: string;
-}
-
-export interface MusicData {
-  genres: string[];
-  artists: string[];
-  tracks: Array<{ name: string; artist: string; }>;
-  playlists: string[];
-  country?: string;
-}
+import type { Recommendation, MusicData } from "@/types/recommendations";
 
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour in milliseconds
 
@@ -69,13 +54,15 @@ export const getRecommendations = async (
 
     if (error) throw error;
 
+    const recommendations = data.recommendations as Recommendation[];
+
     // Cache the new recommendations if no specific category was requested
     if (!selectedCategory) {
       const { error: upsertError } = await supabase
         .from('cached_recommendations')
         .upsert({
           user_id: user.id,
-          recommendations: data.recommendations,
+          recommendations: recommendations,
         });
 
       if (upsertError) {
@@ -83,7 +70,7 @@ export const getRecommendations = async (
       }
     }
 
-    return data.recommendations;
+    return recommendations;
   } catch (error) {
     console.error('Error getting AI recommendations:', error);
     throw error;

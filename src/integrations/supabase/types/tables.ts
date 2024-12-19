@@ -1,3 +1,5 @@
+import type { Recommendation } from '@/types/recommendations';
+
 export type Tables = {
   favorite_artists: {
     Row: {
