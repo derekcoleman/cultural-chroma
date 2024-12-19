@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface Recommendation {
   type: string;
@@ -24,14 +25,13 @@ export const getRecommendations = async (
   selectedCategory?: string
 ): Promise<Recommendation[]> => {
   try {
-    // Get user's preferred categories
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     // Check if we have cached recommendations
     const { data: cachedData } = await supabase
       .from('cached_recommendations')
-      .select('recommendations, created_at')
+      .select('*')
       .eq('user_id', user.id)
       .single();
 
@@ -40,7 +40,7 @@ export const getRecommendations = async (
       const cacheAge = Date.now() - new Date(cachedData.created_at).getTime();
       if (cacheAge < CACHE_DURATION) {
         console.log('Using cached recommendations');
-        return cachedData.recommendations;
+        return cachedData.recommendations as Recommendation[];
       }
     }
 
@@ -71,15 +71,16 @@ export const getRecommendations = async (
 
     // Cache the new recommendations if no specific category was requested
     if (!selectedCategory) {
-      await supabase
+      const { error: upsertError } = await supabase
         .from('cached_recommendations')
         .upsert({
           user_id: user.id,
           recommendations: data.recommendations,
-          created_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
         });
+
+      if (upsertError) {
+        console.error('Error caching recommendations:', upsertError);
+      }
     }
 
     return data.recommendations;
