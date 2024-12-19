@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { spotifyApi } from "@/lib/spotify";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const LandingHero = () => {
   const { toast } = useToast();
@@ -14,6 +15,47 @@ const LandingHero = () => {
       console.log('Authentication result:', result);
       
       if (result.authenticated) {
+        // Get Spotify user profile
+        const profile = await spotifyApi.currentUser.profile();
+        console.log('Spotify profile:', profile);
+
+        // Sign up/in with Supabase using Spotify email
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: profile.email,
+          password: `spotify-${profile.id}`, // Using Spotify ID as part of password
+        });
+
+        if (authError && authError.message.includes('Invalid login credentials')) {
+          // User doesn't exist, create them
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: profile.email,
+            password: `spotify-${profile.id}`,
+            options: {
+              data: {
+                spotify_id: profile.id,
+                display_name: profile.display_name,
+              },
+            },
+          });
+
+          if (signUpError) {
+            console.error('Error creating user:', signUpError);
+            throw signUpError;
+          }
+
+          // Update the profile with Spotify data
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              display_name: profile.display_name,
+            })
+            .eq('id', signUpData.user?.id);
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+        }
+
         toast({
           title: "Successfully connected to Spotify",
           description: "Redirecting to dashboard...",
