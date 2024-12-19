@@ -52,12 +52,12 @@ export const ProfileSection = () => {
     // Check if preferred categories have changed
     const categoriesChanged = JSON.stringify(profile?.preferred_categories) !== JSON.stringify(editedProfile.preferred_categories);
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('profiles')
       .update(editedProfile)
       .eq('id', user.id);
 
-    if (error) {
+    if (updateError) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -68,13 +68,20 @@ export const ProfileSection = () => {
 
     // If categories changed, clear cached recommendations
     if (categoriesChanged) {
-      const { error: cacheError } = await supabase
+      console.log('Categories changed, clearing cache...');
+      const { error: deleteError } = await supabase
         .from('cached_recommendations')
         .delete()
         .eq('user_id', user.id);
 
-      if (cacheError) {
-        console.error('Error clearing cached recommendations:', cacheError);
+      if (deleteError) {
+        console.error('Error clearing cached recommendations:', deleteError);
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Profile updated but failed to refresh recommendations",
+        });
+        return;
       }
     }
 
