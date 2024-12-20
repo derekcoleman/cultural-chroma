@@ -3,11 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Expand, ArrowRight, Twitter, Instagram } from "lucide-react";
 import { Artist } from "@/types/spotify";
-
-interface Track {
-  name: string;
-  artist: string;
-}
+import { generateNickname } from "@/utils/nicknameGenerator";
+import { createShareText } from "@/utils/shareTextGenerator";
+import { ProfileSummary } from "./ProfileSummary";
 
 interface CultureProfileProps {
   artists: Artist[];
@@ -26,74 +24,8 @@ const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
     ...tracks.map(t => t.artist)
   ]);
 
-  // Generate a fun nickname based on musical profile
-  const generateNickname = () => {
-    const prefixes = {
-      jazz: "Jazz Cat",
-      classical: "Maestro",
-      rock: "Rock Star",
-      electronic: "Digital Nomad",
-      folk: "Folk Soul",
-      pop: "Pop Icon",
-      indie: "Indie Spirit",
-      metal: "Metal Warrior",
-      hip: "Hip Hop Head",
-      rap: "Flow Master",
-      soul: "Soul Seeker",
-      blues: "Blues Wanderer",
-      country: "Country Heart",
-      reggae: "Reggae Rider",
-      latin: "Latin Groove"
-    };
-
-    const suffixes = [
-      "Extraordinaire",
-      "Supreme",
-      "of the Digital Age",
-      "of the Underground",
-      "of the Future",
-      "in Training",
-      "2.0",
-      "Ultimate",
-      "Mastermind",
-      "Guru"
-    ];
-
-    // Find the most common genre category
-    const baseGenre = Object.keys(prefixes).find(key => 
-      allGenres.some(genre => genre.toLowerCase().includes(key))
-    ) || "music";
-
-    const prefix = prefixes[baseGenre] || "Melody Master";
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-
-    return `${prefix} ${suffix}`;
-  };
-
-  // Create share text for social media
-  const createShareText = () => {
-    const nickname = generateNickname();
-    const topGenres = allGenres.slice(0, 3).join(", ");
-    return encodeURIComponent(
-      `🎵 I'm a "${nickname}" according to my Spotify analysis!\n\nMy musical journey spans ${allArtists.size} artists and ${allGenres.length} genres, with a focus on ${topGenres}.\n\nDiscover your musical identity at culturalprofile.app 🎧`
-    );
-  };
-
-  // Create a brief summary based on musical profile
-  const createBriefSummary = () => {
-    if (allGenres.length === 0) return "Start adding music to see your cultural profile";
-    
-    const topGenres = allGenres.slice(0, 3);
-    const artistCount = allArtists.size;
-    const nickname = generateNickname();
-    
-    return `You're a "${nickname}" with ${artistCount} artists and ${tracks.length} tracks, spanning genres like ${topGenres.join(", ")}`;
-  };
-
-  // Create a detailed cultural analysis
-  const createDetailedAnalysis = () => {
-    if (allGenres.length === 0) return "Add more music to get a detailed cultural analysis";
-
+  // Generate aesthetic tags based on genres
+  const generateAestheticTags = () => {
     const aestheticMapping: Record<string, string[]> = {
       jazz: ["sophisticated", "urban", "classic"],
       classical: ["refined", "traditional", "elegant"],
@@ -112,7 +44,6 @@ const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
       latin: ["passionate", "social", "energetic"]
     };
 
-    // Collect aesthetic tags based on genres
     const aestheticTags = new Set<string>();
     allGenres.forEach(genre => {
       const baseGenre = Object.keys(aestheticMapping).find(key => 
@@ -123,11 +54,33 @@ const CultureProfile = ({ artists, tracks = [] }: CultureProfileProps) => {
       }
     });
 
+    return Array.from(aestheticTags);
+  };
+
+  const nickname = generateNickname(allGenres, generateAestheticTags());
+
+  const handleShare = (platform: 'twitter' | 'instagram') => {
+    const shareText = createShareText(
+      nickname,
+      allGenres,
+      allArtists.size,
+      allGenres.length
+    );
+    const url = platform === 'twitter' 
+      ? `https://twitter.com/intent/tweet?text=${shareText}`
+      : `https://www.instagram.com/create/story?text=${shareText}`;
+    window.open(url, '_blank');
+  };
+
+  // Create a detailed cultural analysis
+  const createDetailedAnalysis = () => {
+    if (allGenres.length === 0) return "Add more music to get a detailed cultural analysis";
+
+    const aestheticTags = generateAestheticTags();
     const tags = Array.from(aestheticTags).slice(0, 5);
     const artistCount = allArtists.size;
     const trackCount = tracks.length;
     const genreCount = allGenres.length;
-    const nickname = generateNickname();
     
     return `Your Musical Identity & Cultural Preferences
 
@@ -159,14 +112,6 @@ ${tags.includes("authentic") ? "• You seek out genuine, unfiltered cultural ex
 Share your unique cultural identity with others and discover how your musical taste shapes your broader cultural preferences!`;
   };
 
-  const handleShare = (platform: 'twitter' | 'instagram') => {
-    const shareText = createShareText();
-    const url = platform === 'twitter' 
-      ? `https://twitter.com/intent/tweet?text=${shareText}`
-      : `https://www.instagram.com/create/story?text=${shareText}`;
-    window.open(url, '_blank');
-  };
-
   return (
     <div className="bg-spotify-darkgray/50 rounded-lg p-4 mb-8 hover:bg-spotify-darkgray/70 transition-colors">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -184,7 +129,14 @@ Share your unique cultural identity with others and discover how your musical ta
                     (Click to explore your unique identity!)
                   </span>
                 </h3>
-                <p className="text-sm text-spotify-lightgray">{createBriefSummary()}</p>
+                <p className="text-sm text-spotify-lightgray">
+                  <ProfileSummary 
+                    nickname={nickname}
+                    artistCount={allArtists.size}
+                    trackCount={tracks.length}
+                    topGenres={allGenres.slice(0, 3)}
+                  />
+                </p>
               </div>
             </div>
             <ArrowRight className="h-5 w-5 text-spotify-lightgray opacity-0 group-hover:opacity-100 transition-opacity" />
