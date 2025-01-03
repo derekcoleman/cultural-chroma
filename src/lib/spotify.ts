@@ -1,9 +1,15 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
 const CLIENT_ID = "45c6b39dac50487b8fadc3a6b2592479";
-const REDIRECT_URI = window.location.href.includes('localhost') 
-  ? 'http://localhost:8080'
-  : 'https://preview--cultural-chroma.lovable.app';
+const REDIRECT_URI = (() => {
+  const currentUrl = window.location.origin;
+  if (currentUrl.includes('localhost')) {
+    return 'http://localhost:8080';
+  }
+  // Always redirect to the same domain the app is running on
+  return currentUrl;
+})();
+
 const SCOPES = [
   "user-read-private",
   "user-top-read",
