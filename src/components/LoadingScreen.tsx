@@ -57,7 +57,16 @@ export const LoadingScreen = () => {
         {icons[iconIndex]}
       </div>
       <div className="text-xl font-medium text-spotify-lightgray animate-pulse">
-        Creating Your Cultural Profile...
+        {progress >= 90 ? (
+          <div className="flex flex-col items-center gap-2">
+            <div>Analyzing Your Music Taste...</div>
+            <div className="text-sm text-spotify-lightgray/70">
+              This might take a moment while we create your personalized recommendations
+            </div>
+          </div>
+        ) : (
+          "Creating Your Cultural Profile..."
+        )}
       </div>
       <div className="w-64 h-2 bg-spotify-darkgray rounded-full overflow-hidden">
         <div 
