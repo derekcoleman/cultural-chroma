@@ -9,25 +9,29 @@ const LandingHero = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Handle the callback from Spotify
   useEffect(() => {
-    // Check if we're in a callback scenario (URL has a code parameter)
     const handleCallback = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      
-      if (code) {
-        try {
-          // The SDK will handle the token exchange automatically
-          await spotifyApi.authenticate();
-          const profile = await spotifyApi.currentUser.profile();
+      try {
+        // Check if we're in a callback situation (URL has a code parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+          console.log('Processing Spotify callback...');
           
+          // Get user profile from Spotify
+          const profile = await spotifyApi.currentUser.profile();
+          console.log('Spotify profile:', profile);
+
           // Use email if available, otherwise use Spotify ID
           const userIdentifier = profile.email || `spotify-user-${profile.id}@example.com`;
-          
-          // Try to sign in first
+          console.log('Using identifier:', userIdentifier);
+
+          // Sign in or sign up with Supabase
           const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
             email: userIdentifier,
-            password: `spotify-${profile.id}`,
+            password: `spotify-${profile.id}`, // Use Spotify ID as part of password
           });
 
           if (authError && authError.message.includes('Invalid login credentials')) {
@@ -63,14 +67,14 @@ const LandingHero = () => {
             description: "Redirecting to dashboard...",
           });
           navigate('/dashboard');
-        } catch (error) {
-          console.error("Callback handling error:", error);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Failed to complete Spotify connection. Please try again.",
-          });
         }
+      } catch (error) {
+        console.error("Callback handling error:", error);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Failed to complete Spotify connection. Please try again.",
+        });
       }
     };
 
@@ -80,14 +84,11 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
+      // This will redirect to Spotify's authorization page
       await spotifyApi.authenticate();
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "Failed to connect to Spotify. Please try again.",
-      });
+      // We don't show an error toast here since we're redirecting to Spotify
     }
   };
 
