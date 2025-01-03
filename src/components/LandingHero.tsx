@@ -79,28 +79,16 @@ const LandingHero = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await spotifyApi.getAccessToken();
-      // If we already have a token, we need to refresh the page to trigger the callback handling
-      if (response) {
-        window.location.reload();
-        return;
-      }
-      
-      // Otherwise, start the authentication flow
+      console.log('Starting Spotify authentication...');
+      // Start the authentication flow directly
       await spotifyApi.authenticate();
     } catch (error) {
-      console.error("Login error:", error);
-      // If there's no token, start a fresh authentication
-      try {
-        await spotifyApi.authenticate();
-      } catch (authError) {
-        console.error("Authentication error:", authError);
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Failed to connect to Spotify. Please try again.",
-        });
-      }
+      console.error("Authentication error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Failed to connect to Spotify. Please try again.",
+      });
     }
   };
 
