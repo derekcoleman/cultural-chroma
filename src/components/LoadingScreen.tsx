@@ -15,6 +15,7 @@ import {
 export const LoadingScreen = () => {
   const [iconIndex, setIconIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState("Creating Your Cultural Profile...");
   
   const icons = [
     <Music className="h-16 w-16" />,
@@ -29,17 +30,29 @@ export const LoadingScreen = () => {
     <Speaker className="h-16 w-16" />
   ];
 
+  const loadingMessages = [
+    "Creating Your Cultural Profile...",
+    "Analyzing Your Music Taste...",
+    "Generating Personalized Recommendations...",
+    "Almost There! Fine-tuning Your Profile..."
+  ];
+
   useEffect(() => {
     const iconInterval = setInterval(() => {
       setIconIndex((prev) => (prev + 1) % icons.length);
     }, 80);
 
-    // Instead of resetting to 0, we'll make the progress bar move more slowly
-    // and stop at 90% until the actual loading is complete
+    const messageInterval = setInterval(() => {
+      setLoadingMessage((prev) => {
+        const currentIndex = loadingMessages.indexOf(prev);
+        return loadingMessages[(currentIndex + 1) % loadingMessages.length];
+      });
+    }, 2000);
+
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev < 90) {
-          return prev + 0.3; // Slower increment
+          return prev + 0.3;
         }
         return prev;
       });
@@ -47,6 +60,7 @@ export const LoadingScreen = () => {
 
     return () => {
       clearInterval(iconInterval);
+      clearInterval(messageInterval);
       clearInterval(progressInterval);
     };
   }, []);
@@ -57,19 +71,23 @@ export const LoadingScreen = () => {
         {icons[iconIndex]}
       </div>
       <div className="text-xl font-medium text-spotify-lightgray animate-pulse">
-        Creating Your Cultural Profile...
+        {loadingMessage}
       </div>
       <div className="w-64 h-2 bg-spotify-darkgray rounded-full overflow-hidden">
         <div 
-          className="h-full bg-spotify-green transition-all duration-200 ease-in-out"
+          className="h-full bg-spotify-green transition-all duration-200 ease-in-out animate-shimmer"
           style={{ 
             width: `${progress}%`,
             backgroundImage: 'linear-gradient(90deg, rgba(29,185,84,0.8) 0%, #1DB954 50%, rgba(29,185,84,0.8) 100%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1s infinite linear'
+            backgroundSize: '200% 100%'
           }}
         />
       </div>
+      {progress >= 90 && (
+        <div className="text-sm text-spotify-lightgray mt-2 max-w-md text-center">
+          We're processing your music data to create the perfect recommendations. This might take a few more seconds...
+        </div>
+      )}
     </div>
   );
 };
