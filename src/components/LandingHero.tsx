@@ -3,73 +3,92 @@ import { spotifyApi } from "@/lib/spotify";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const LandingHero = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Handle the callback from Spotify
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        // Check if we're in a callback situation (URL has a code parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+          console.log('Processing Spotify callback...');
+          
+          // Get user profile from Spotify
+          const profile = await spotifyApi.currentUser.profile();
+          console.log('Spotify profile:', profile);
+
+          // Use email if available, otherwise use Spotify ID
+          const userIdentifier = profile.email || `spotify-user-${profile.id}@example.com`;
+          console.log('Using identifier:', userIdentifier);
+
+          // Sign in or sign up with Supabase
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: userIdentifier,
+            password: `spotify-${profile.id}`, // Use Spotify ID as part of password
+          });
+
+          if (authError && authError.message.includes('Invalid login credentials')) {
+            // User doesn't exist, sign them up
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: userIdentifier,
+              password: `spotify-${profile.id}`,
+            });
+
+            if (signUpError) {
+              console.error('Sign up error:', signUpError);
+              throw signUpError;
+            }
+
+            // Update profile with Spotify display name
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ 
+                display_name: profile.display_name || `Spotify User ${profile.id}`,
+              })
+              .eq('id', signUpData.user?.id);
+
+            if (profileError) {
+              console.error('Profile update error:', profileError);
+            }
+          } else if (authError) {
+            console.error('Auth error:', authError);
+            throw authError;
+          }
+
+          toast({
+            title: "Successfully connected to Spotify",
+            description: "Redirecting to dashboard...",
+          });
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error("Callback handling error:", error);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Failed to complete Spotify connection. Please try again.",
+        });
+      }
+    };
+
+    handleCallback();
+  }, [navigate, toast]);
+
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
-      const result = await spotifyApi.authenticate();
-      console.log('Authentication result:', result);
-      
-      if (result) {
-        // Get user profile from Spotify
-        const profile = await spotifyApi.currentUser.profile();
-        console.log('Spotify profile:', profile);
-
-        // Use email if available, otherwise use Spotify ID
-        const userIdentifier = profile.email || `spotify-user-${profile.id}@example.com`;
-        console.log('Using identifier:', userIdentifier);
-
-        // Sign in or sign up with Supabase
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email: userIdentifier,
-          password: `spotify-${profile.id}`, // Use Spotify ID as part of password
-        });
-
-        if (authError && authError.message.includes('Invalid login credentials')) {
-          // User doesn't exist, sign them up
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: userIdentifier,
-            password: `spotify-${profile.id}`,
-          });
-
-          if (signUpError) {
-            console.error('Sign up error:', signUpError);
-            throw signUpError;
-          }
-
-          // Update profile with Spotify display name
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ 
-              display_name: profile.display_name || `Spotify User ${profile.id}`,
-            })
-            .eq('id', signUpData.user?.id);
-
-          if (profileError) {
-            console.error('Profile update error:', profileError);
-          }
-        } else if (authError) {
-          console.error('Auth error:', authError);
-          throw authError;
-        }
-
-        toast({
-          title: "Successfully connected to Spotify",
-          description: "Redirecting to dashboard...",
-        });
-        navigate('/dashboard');
-      }
+      // This will redirect to Spotify's authorization page
+      await spotifyApi.authenticate();
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "Failed to connect to Spotify. Please try again.",
-      });
+      // We don't show an error toast here since we're redirecting to Spotify
     }
   };
 
