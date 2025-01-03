@@ -34,9 +34,16 @@ export const LoadingScreen = () => {
       setIconIndex((prev) => (prev + 1) % icons.length);
     }, 80);
 
+    // Instead of resetting to 0, we'll make the progress bar move more slowly
+    // and stop at 90% until the actual loading is complete
     const progressInterval = setInterval(() => {
-      setProgress((prev) => (prev < 100 ? prev + 1 : 0));
-    }, 30);
+      setProgress((prev) => {
+        if (prev < 90) {
+          return prev + 0.3; // Slower increment
+        }
+        return prev;
+      });
+    }, 50);
 
     return () => {
       clearInterval(iconInterval);
