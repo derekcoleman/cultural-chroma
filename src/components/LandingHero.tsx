@@ -97,27 +97,32 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
+      console.log('Will redirect to Spotify OAuth');
       
-      // Clean the URL of any query parameters before authentication
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      // Manual OAuth flow - more reliable than SDK authenticate()
+      const clientId = "45c6b39dac50487b8fadc3a6b2592479";
+      const redirectUri = window.location.origin;
+      const scopes = [
+        "user-read-private",
+        "user-top-read", 
+        "playlist-read-private",
+        "user-read-playback-position",
+        "user-read-currently-playing"
+      ];
       
-      console.log('Cleaned URL:', window.location.href);
-      console.log('Redirect URI configured:', window.location.origin);
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope: scopes.join(' '),
+        redirect_uri: redirectUri,
+        show_dialog: 'true'
+      });
       
-      // Force a small delay to ensure URL is clean
-      setTimeout(async () => {
-        try {
-          await spotifyApi.authenticate();
-        } catch (error) {
-          console.error("Delayed authentication error:", error);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error", 
-            description: "Spotify authentication failed. Please check your redirect URI settings.",
-          });
-        }
-      }, 100);
+      const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+      console.log('Redirecting to:', authUrl);
+      
+      // Redirect to Spotify
+      window.location.href = authUrl;
       
     } catch (error) {
       console.error("Login error:", error);
