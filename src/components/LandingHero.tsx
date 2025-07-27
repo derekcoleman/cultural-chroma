@@ -97,10 +97,27 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
-      console.log('Current domain:', window.location.origin);
       
-      // Use the Spotify SDK's built-in authentication
-      await spotifyApi.authenticate();
+      // Clean the URL of any query parameters before authentication
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      
+      console.log('Cleaned URL:', window.location.href);
+      console.log('Redirect URI configured:', window.location.origin);
+      
+      // Force a small delay to ensure URL is clean
+      setTimeout(async () => {
+        try {
+          await spotifyApi.authenticate();
+        } catch (error) {
+          console.error("Delayed authentication error:", error);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error", 
+            description: "Spotify authentication failed. Please check your redirect URI settings.",
+          });
+        }
+      }, 100);
       
     } catch (error) {
       console.error("Login error:", error);
