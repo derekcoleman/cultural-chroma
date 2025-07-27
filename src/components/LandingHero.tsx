@@ -97,7 +97,7 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
-      console.log('Will redirect to Spotify OAuth');
+      console.log('Device type:', /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
       
       // Manual OAuth flow - more reliable than SDK authenticate()
       const clientId = "45c6b39dac50487b8fadc3a6b2592479";
@@ -119,10 +119,11 @@ const LandingHero = () => {
       });
       
       const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
-      console.log('Redirecting to:', authUrl);
+      console.log('Auth URL:', authUrl);
+      console.log('Current origin:', window.location.origin);
       
-      // Redirect to Spotify
-      window.location.href = authUrl;
+      // Force immediate redirect - better for desktop browsers
+      window.location.assign(authUrl);
       
     } catch (error) {
       console.error("Login error:", error);
