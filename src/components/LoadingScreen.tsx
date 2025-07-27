@@ -12,7 +12,11 @@ import {
   Speaker
 } from "lucide-react";
 
-export const LoadingScreen = () => {
+interface LoadingScreenProps {
+  onComplete?: () => void;
+}
+
+export const LoadingScreen = ({ onComplete }: LoadingScreenProps = {}) => {
   const [iconIndex, setIconIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState("Creating Your Cultural Profile...");
@@ -42,28 +46,43 @@ export const LoadingScreen = () => {
       setIconIndex((prev) => (prev + 1) % icons.length);
     }, 80);
 
+    let messageIndex = 0;
     const messageInterval = setInterval(() => {
-      setLoadingMessage((prev) => {
-        const currentIndex = loadingMessages.indexOf(prev);
-        return loadingMessages[(currentIndex + 1) % loadingMessages.length];
-      });
-    }, 2000);
+      if (messageIndex < loadingMessages.length - 1) {
+        messageIndex++;
+        setLoadingMessage(loadingMessages[messageIndex]);
+      }
+    }, 3000);
 
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev < 90) {
-          return prev + 0.3;
-        }
-        return prev;
-      });
-    }, 50);
+    // More realistic progress that corresponds to actual loading stages
+    const progressSteps = [
+      { time: 500, progress: 10 },   // Initial connection
+      { time: 1500, progress: 25 },  // Authenticating
+      { time: 3000, progress: 45 },  // Fetching data
+      { time: 5000, progress: 70 },  // Processing data
+      { time: 8000, progress: 85 },  // Generating recommendations
+      // Will reach 100% when actually done
+    ];
+
+    const progressTimeouts = progressSteps.map(({ time, progress }) =>
+      setTimeout(() => setProgress(progress), time)
+    );
 
     return () => {
       clearInterval(iconInterval);
       clearInterval(messageInterval);
-      clearInterval(progressInterval);
+      progressTimeouts.forEach(clearTimeout);
     };
   }, []);
+
+  // Handle completion when onComplete is provided
+  useEffect(() => {
+    if (onComplete) {
+      setProgress(100);
+      const completeTimeout = setTimeout(onComplete, 300);
+      return () => clearTimeout(completeTimeout);
+    }
+  }, [onComplete]);
 
   return (
     <div className="min-h-screen bg-spotify-black text-white flex flex-col items-center justify-center gap-6">
@@ -83,8 +102,8 @@ export const LoadingScreen = () => {
           }}
         />
       </div>
-      {progress >= 90 && (
-        <div className="text-sm text-spotify-lightgray mt-2 max-w-md text-center">
+      {progress >= 70 && (
+        <div className="text-sm text-spotify-lightgray mt-2 max-w-md text-center animate-fade-in">
           We're processing your music data to create the perfect recommendations. This might take a few more seconds...
         </div>
       )}

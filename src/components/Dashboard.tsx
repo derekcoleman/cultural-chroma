@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [topTracks, setTopTracks] = useState<{ name: string; artist: string; }[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDataReady, setIsDataReady] = useState(false);
   const [musicData, setMusicData] = useState<MusicData | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -103,25 +104,25 @@ const Dashboard = () => {
       });
       navigate("/");
     } finally {
-      setIsLoading(false);
+      setIsDataReady(true);
     }
   };
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen onComplete={isDataReady ? () => setIsLoading(false) : undefined} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-spotify-black via-spotify-black to-spotify-darkgray text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <HeadphonesIcon className="h-12 w-12 text-spotify-green" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-spotify-lightgray bg-clip-text text-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <HeadphonesIcon className="h-8 w-8 sm:h-12 sm:w-12 text-spotify-green flex-shrink-0" />
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white to-spotify-lightgray bg-clip-text text-transparent">
               Your Cultural Profile
             </h1>
           </div>
-          <div className="relative z-50">
+          <div className="relative z-50 self-start sm:self-auto">
             <ProfileMenu />
           </div>
         </div>

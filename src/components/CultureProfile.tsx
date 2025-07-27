@@ -113,40 +113,40 @@ Share your unique cultural identity with others and discover how your musical ta
   };
 
   return (
-    <div className="bg-spotify-darkgray/50 rounded-lg p-4 mb-8 hover:bg-spotify-darkgray/70 transition-colors">
+    <div className="bg-spotify-darkgray/50 rounded-lg p-3 sm:p-4 mb-6 sm:mb-8 hover:bg-spotify-darkgray/70 transition-colors">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full text-left flex items-center justify-between hover:bg-spotify-darkgray/80 group"
+            className="w-full text-left flex items-start sm:items-center justify-between hover:bg-spotify-darkgray/80 group p-2 sm:p-4 min-h-fit"
           >
-            <div className="flex items-center gap-4">
-              <Expand className="h-5 w-5 text-spotify-green" />
-              <div>
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  Your Cultural Profile
-                  <span className="text-sm font-normal text-spotify-lightgray animate-pulse">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
+              <Expand className="h-5 w-5 text-spotify-green flex-shrink-0 mt-0.5 sm:mt-0" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base sm:text-lg font-semibold text-white flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                  <span>Your Cultural Profile</span>
+                  <span className="text-xs sm:text-sm font-normal text-spotify-lightgray animate-pulse">
                     (Click to explore your unique identity!)
                   </span>
                 </h3>
-                <p className="text-sm text-spotify-lightgray">
+                <div className="text-sm text-spotify-lightgray mt-1 sm:mt-0">
                   <ProfileSummary 
                     nickname={nickname}
                     artistCount={allArtists.size}
                     trackCount={tracks.length}
                     topGenres={allGenres.slice(0, 3)}
                   />
-                </p>
+                </div>
               </div>
             </div>
-            <ArrowRight className="h-5 w-5 text-spotify-lightgray opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowRight className="h-5 w-5 text-spotify-lightgray opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5 sm:mt-0" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-spotify-black text-white border-spotify-darkgray max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-spotify-black text-white border-spotify-darkgray max-w-2xl max-h-[80vh] overflow-y-auto mx-4">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-spotify-green pb-4 flex items-center justify-between">
-              <span>Your Cultural Profile Analysis</span>
-              <div className="flex gap-2">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-spotify-green pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-left">Your Cultural Profile Analysis</span>
+              <div className="flex gap-2 self-start sm:self-auto">
                 <Button
                   variant="ghost"
                   size="icon"
