@@ -3,10 +3,7 @@ import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 const CLIENT_ID = "45c6b39dac50487b8fadc3a6b2592479";
 const REDIRECT_URI = (() => {
   const currentUrl = window.location.origin;
-  if (currentUrl.includes('localhost')) {
-    return 'http://localhost:8080';
-  }
-  // Always redirect to the same domain the app is running on
+  console.log('Setting redirect URI to:', currentUrl);
   return currentUrl;
 })();
 
