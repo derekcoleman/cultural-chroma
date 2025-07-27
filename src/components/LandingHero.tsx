@@ -17,12 +17,18 @@ const LandingHero = () => {
         // Check if we're in a callback situation (URL has a code parameter)
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
+        const state = urlParams.get('state');
         
         if (code) {
           console.log('Processing Spotify callback with code:', code);
+          console.log('State parameter:', state);
           
           // Clear the URL parameters to clean up the address bar
           window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Clear any old cached data before new authentication
+          localStorage.removeItem('spotify-sdk:AuthorizationCodeWithPKCEStrategy:token');
+          localStorage.removeItem('spotify-sdk:request-handler');
           
           // Now authenticate with the Spotify SDK using the code
           try {
@@ -99,6 +105,15 @@ const LandingHero = () => {
       console.log('Starting Spotify authentication...');
       console.log('Device type:', /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop');
       
+      // Clear any existing Spotify tokens/cache to prevent conflicts
+      localStorage.removeItem('spotify-sdk:AuthorizationCodeWithPKCEStrategy:token');
+      localStorage.removeItem('spotify-sdk:request-handler');
+      sessionStorage.clear();
+      
+      // Clear any URL parameters that might interfere
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      
       // Manual OAuth flow - more reliable than SDK authenticate()
       const clientId = "45c6b39dac50487b8fadc3a6b2592479";
       const redirectUri = window.location.origin;
@@ -110,12 +125,15 @@ const LandingHero = () => {
         "user-read-currently-playing"
       ];
       
+      // Add cache-busting parameter and force new consent
       const params = new URLSearchParams({
         response_type: 'code',
         client_id: clientId,
         scope: scopes.join(' '),
         redirect_uri: redirectUri,
-        show_dialog: 'true'
+        show_dialog: 'true',
+        // Cache busting parameter
+        state: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       });
       
       const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;

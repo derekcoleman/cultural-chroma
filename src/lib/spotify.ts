@@ -22,11 +22,35 @@ console.log('Spotify Configuration:', {
   'Current URL': window.location.href
 });
 
-export const spotifyApi = SpotifyApi.withUserAuthorization(
-  CLIENT_ID,
-  REDIRECT_URI,
-  SCOPES
-);
+// Create a fresh instance each time to avoid caching issues
+const createSpotifyApi = () => {
+  // Clear any existing tokens before creating new instance
+  localStorage.removeItem('spotify-sdk:AuthorizationCodeWithPKCEStrategy:token');
+  localStorage.removeItem('spotify-sdk:request-handler');
+  
+  return SpotifyApi.withUserAuthorization(
+    CLIENT_ID,
+    REDIRECT_URI,
+    SCOPES
+  );
+};
+
+// Always create a fresh instance
+export const spotifyApi = createSpotifyApi();
+
+// Function to reset authentication state
+export const resetSpotifyAuth = () => {
+  localStorage.removeItem('spotify-sdk:AuthorizationCodeWithPKCEStrategy:token');
+  localStorage.removeItem('spotify-sdk:request-handler');
+  sessionStorage.clear();
+  console.log('Spotify authentication state cleared');
+};
+
+// Function to get a fresh API instance
+export const getFreshSpotifyApi = () => {
+  resetSpotifyAuth();
+  return createSpotifyApi();
+};
 
 export const getTopArtists = async () => {
   try {

@@ -8,6 +8,8 @@ import {
   getTopTracks, 
   getUserPlaylists,
   getUserProfile,
+  resetSpotifyAuth,
+  getFreshSpotifyApi,
 } from "@/lib/spotify";
 import { getRecommendations } from "@/lib/recommendations";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +41,12 @@ const Dashboard = () => {
 
   const initializeSpotify = async () => {
     try {
-      const accessToken = await spotifyApi.authenticate();
+      // Reset any cached authentication state to prevent conflicts
+      resetSpotifyAuth();
+      
+      // Get a fresh API instance
+      const freshApi = getFreshSpotifyApi();
+      const accessToken = await freshApi.authenticate();
       
       if (accessToken) {
         const [artistsResponse, tracksResponse, playlists, profile] = await Promise.all([
