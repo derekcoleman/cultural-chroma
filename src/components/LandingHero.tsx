@@ -84,11 +84,36 @@ const LandingHero = () => {
   const handleLogin = async () => {
     try {
       console.log('Starting Spotify authentication...');
-      // This will redirect to Spotify's authorization page
-      await spotifyApi.authenticate();
+      console.log('Current domain:', window.location.origin);
+      
+      // Manually construct the Spotify authorization URL
+      const clientId = "45c6b39dac50487b8fadc3a6b2592479";
+      const redirectUri = encodeURIComponent(window.location.origin);
+      const scopes = encodeURIComponent([
+        "user-read-private",
+        "user-top-read", 
+        "playlist-read-private",
+        "user-read-playback-position",
+        "user-read-currently-playing"
+      ].join(' '));
+      
+      const authUrl = `https://accounts.spotify.com/authorize?` +
+        `client_id=${clientId}&` +
+        `response_type=code&` +
+        `redirect_uri=${redirectUri}&` +
+        `scope=${scopes}&` +
+        `show_dialog=true`;
+      
+      console.log('Redirecting to:', authUrl);
+      window.location.href = authUrl;
+      
     } catch (error) {
       console.error("Login error:", error);
-      // We don't show an error toast here since we're redirecting to Spotify
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Failed to start Spotify authentication. Please try again.",
+      });
     }
   };
 
