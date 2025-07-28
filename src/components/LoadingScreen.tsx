@@ -56,12 +56,12 @@ export const LoadingScreen = ({ onComplete }: LoadingScreenProps = {}) => {
 
     // More realistic progress that corresponds to actual loading stages
     const progressSteps = [
-      { time: 500, progress: 10 },   // Initial connection
-      { time: 1500, progress: 25 },  // Authenticating
-      { time: 3000, progress: 45 },  // Fetching data
+      { time: 500, progress: 15 },   // Initial connection
+      { time: 1500, progress: 30 },  // Authenticating
+      { time: 3000, progress: 50 },  // Fetching data
       { time: 5000, progress: 70 },  // Processing data
-      { time: 8000, progress: 85 },  // Generating recommendations
-      // Will reach 100% when actually done
+      { time: 8000, progress: 80 },  // Generating recommendations
+      // Will reach 100% only when onComplete is called
     ];
 
     const progressTimeouts = progressSteps.map(({ time, progress }) =>
